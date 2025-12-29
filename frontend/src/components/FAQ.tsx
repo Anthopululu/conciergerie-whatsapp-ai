@@ -94,7 +94,7 @@ function FAQ() {
           <p className="faq-subtitle">L'IA utilisera ces informations pour répondre aux clients</p>
         </div>
         <button className="faq-add-btn" onClick={() => handleOpenModal()}>
-          + Ajouter une FAQ
+          + Ajouter une question/réponse
         </button>
       </div>
 
@@ -102,10 +102,7 @@ function FAQ() {
         {faqs.length === 0 ? (
           <div className="empty-state">
             <div className="empty-icon">❓</div>
-            <p>Aucune FAQ pour le moment</p>
-            <button className="faq-add-btn-secondary" onClick={() => handleOpenModal()}>
-              Créer la première FAQ
-            </button>
+            <p>Aucune question/réponse pour le moment</p>
           </div>
         ) : (
           faqs.map((faq) => (
@@ -136,7 +133,7 @@ function FAQ() {
       {showModal && (
         <div className="modal-overlay" onClick={() => !isSubmitting && handleCloseModal()}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <h2>{editingFaq ? 'Modifier la FAQ' : 'Ajouter une FAQ'}</h2>
+            <h2>{editingFaq ? 'Modifier la question/réponse' : 'Ajouter une question/réponse'}</h2>
             <form onSubmit={handleSubmit}>
               <div className="form-group">
                 <label htmlFor="question">Question</label>

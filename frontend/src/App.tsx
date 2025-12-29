@@ -24,6 +24,7 @@ function App() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [conversationAutoReply, setConversationAutoReply] = useState<Record<number, number>>({});
   const [showFeatureRequestModal, setShowFeatureRequestModal] = useState(false);
   const [featureTitle, setFeatureTitle] = useState('');
   const [featureDescription, setFeatureDescription] = useState('');
@@ -88,7 +89,20 @@ function App() {
   const fetchConversations = async () => {
     try {
       const response = await axios.get('/api/conversations');
-      setConversations(response.data);
+      const fetchedConversations = response.data;
+      setConversations(fetchedConversations);
+      
+      // Update conversationAutoReply state with current values from DB
+      // Only update if not already set (preserve user's manual changes)
+      setConversationAutoReply(prev => {
+        const updated = { ...prev };
+        fetchedConversations.forEach((conv: Conversation) => {
+          if (!(conv.id in updated)) {
+            updated[conv.id] = conv.ai_auto_reply ?? 1;
+          }
+        });
+        return updated;
+      });
     } catch (error) {
       console.error('Error fetching conversations:', error);
     }
@@ -121,6 +135,22 @@ function App() {
   const handleSelectConversation = (conversation: Conversation) => {
     setSelectedConversation(conversation);
     fetchMessages(conversation.id);
+    
+    // Initialize auto-reply state for this conversation if not already set
+    if (!(conversation.id in conversationAutoReply)) {
+      setConversationAutoReply(prev => ({
+        ...prev,
+        [conversation.id]: conversation.ai_auto_reply ?? 1
+      }));
+    }
+  };
+
+  // Handle auto-reply toggle update
+  const handleAutoReplyUpdate = (conversationId: number, aiAutoReply: number) => {
+    setConversationAutoReply(prev => ({
+      ...prev,
+      [conversationId]: aiAutoReply
+    }));
   };
 
   // Submit feature request
@@ -183,18 +213,36 @@ function App() {
     <div className="app">
       <div className="sidebar">
         <div className="sidebar-header">
-          <div className="header-top">
-            <h1>
-              <span className="header-icon">💎</span>
-              {conciergerie?.name || 'Conciergerie'}
-            </h1>
-            <button className="logout-button" onClick={handleLogout} title="Déconnexion">
-              🚪
-            </button>
-          </div>
+          <h1>
+            <span className="header-icon">💎</span>
+            {conciergerie?.name || 'Conciergerie'}
+          </h1>
           <div className="status">
             <span className="status-dot"></span>
-            <span>En ligne • IA active</span>
+            <span>Connecté</span>
+            <button 
+              onClick={handleLogout}
+              style={{ 
+                marginLeft: '10px', 
+                padding: '6px 12px', 
+                fontSize: '12px',
+                background: 'rgba(255, 255, 255, 0.2)',
+                color: 'white',
+                border: '1px solid rgba(255, 255, 255, 0.3)',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                fontWeight: '500',
+                transition: 'all 0.2s ease'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.3)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.2)';
+              }}
+            >
+              Déconnexion
+            </button>
           </div>
         </div>
 
@@ -232,6 +280,9 @@ function App() {
               conversation={selectedConversation}
               messages={messages}
               onSendMessage={sendMessage}
+              onConversationUpdate={fetchConversations}
+              aiAutoReply={conversationAutoReply[selectedConversation.id] ?? selectedConversation.ai_auto_reply ?? 1}
+              onAutoReplyUpdate={handleAutoReplyUpdate}
             />
           ) : (
             <div className="empty-state">

@@ -15,8 +15,7 @@ export async function generateAISuggestion(conversationId: number, clientMessage
     const history = dbQueries.getConversationHistory(conversationId, 10).reverse();
 
     // Get conversation to find conciergerie_id
-    const allConversations = dbQueries.getAllConversations();
-    const conversation = allConversations.find(c => c.id === conversationId);
+    const conversation = dbQueries.getConversationById(conversationId);
 
     // Get FAQs for this conciergerie
     let faqContext = '';

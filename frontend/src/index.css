@@ -10,7 +10,7 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #0ea5e9 100%);
   overflow: hidden;
 }
 
@@ -22,5 +22,5 @@ body {
 /* Smooth scrolling for all scrollable areas */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(102, 126, 234, 0.2) transparent;
+  scrollbar-color: rgba(37, 99, 235, 0.2) transparent;
 }

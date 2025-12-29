@@ -3,7 +3,7 @@ import axios from 'axios';
 import './Login.css';
 
 interface LoginProps {
-  onLoginSuccess: (token: string, conciergerie: { id: number; name: string; email: string }) => void;
+  onLoginSuccess: (token: string) => void;
 }
 
 function Login({ onLoginSuccess }: LoginProps) {
@@ -18,13 +18,13 @@ function Login({ onLoginSuccess }: LoginProps) {
     setIsLoading(true);
 
     try {
-      const response = await axios.post('/api/auth/login', {
+      const response = await axios.post('/api/admin/auth/login', {
         email,
         password
       });
 
       if (response.data.success) {
-        onLoginSuccess(response.data.token, response.data.conciergerie);
+        onLoginSuccess(response.data.token);
       }
     } catch (err: any) {
       console.error('Login error:', err);
@@ -42,9 +42,9 @@ function Login({ onLoginSuccess }: LoginProps) {
     <div className="login-container">
       <div className="login-card">
         <div className="login-header">
-          <span className="login-icon">💎</span>
-          <h1>Conciergerie</h1>
-          <p>Connectez-vous à votre espace</p>
+          <span className="login-icon">🔐</span>
+          <h1>Administration</h1>
+          <p>Connectez-vous à votre espace admin</p>
         </div>
 
         <form onSubmit={handleSubmit} className="login-form">
@@ -60,7 +60,7 @@ function Login({ onLoginSuccess }: LoginProps) {
               id="email"
               type="email"
               className="form-input"
-              placeholder="votre@email.com"
+              placeholder="admin@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -90,10 +90,10 @@ function Login({ onLoginSuccess }: LoginProps) {
             {isLoading ? 'Connexion...' : 'Se connecter'}
           </button>
         </form>
-
       </div>
     </div>
   );
 }
 
 export default Login;
+

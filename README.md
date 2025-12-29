@@ -318,6 +318,19 @@ Pour améliorer l'application :
 
 ## Support
 
+## Déploiement en Production
+
+Pour déployer l'application en production, consultez le guide complet : **[DEPLOYMENT.md](./DEPLOYMENT.md)**
+
+Le guide couvre :
+- Déploiement sur VPS (Ubuntu/Debian)
+- Configuration Nginx et SSL
+- Déploiement avec Docker
+- Déploiement sur Railway/Render
+- Scripts de déploiement automatisés
+
+## Support
+
 Pour toute question, vérifier :
 - Documentation Twilio : https://www.twilio.com/docs/whatsapp
 - Documentation Anthropic Claude : https://docs.anthropic.com/
