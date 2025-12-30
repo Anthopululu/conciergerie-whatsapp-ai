@@ -354,7 +354,8 @@ export const dbQueries = {
       const verify = db.exec('SELECT plaintext_password FROM conciergeries WHERE id = ?', [id]);
       if (verify.length > 0 && verify[0].values.length > 0) {
         const savedPassword = verify[0].values[0][0];
-        console.log(`✅ Verified: plaintext_password saved as: ${savedPassword ? savedPassword.substring(0, 3) + '***' : 'NULL'}`);
+        const passwordStr = typeof savedPassword === 'string' ? savedPassword : String(savedPassword);
+        console.log(`✅ Verified: plaintext_password saved as: ${passwordStr ? passwordStr.substring(0, 3) + '***' : 'NULL'}`);
       }
     } else {
       db.run(

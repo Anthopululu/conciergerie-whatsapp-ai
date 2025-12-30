@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    env_file:
+      - .env.production
+    volumes:
+      - ./concierge.db:/app/concierge.db
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - conciergerie-network
+
+  # Optionnel : PostgreSQL pour production
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=conciergerie
+      - POSTGRES_USER=conciergerie
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backups:/backups
+    restart: unless-stopped
+    networks:
+      - conciergerie-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conciergerie"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
+    driver: local
+
+networks:
+  conciergerie-network:
+    driver: bridge
+
+

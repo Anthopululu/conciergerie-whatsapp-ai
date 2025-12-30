@@ -1,3 +1,23 @@
+# Correction Rapide des Erreurs de Build
+
+Sur le serveur, exécutez ces commandes :
+
+## 1. Corriger database.ts
+
+```bash
+cd /root/conciergerie-whatsapp-ai/backend/src
+sed -i '357s/.*/        const savedPassword = verify[0].values[0][0];\
+        const passwordStr = typeof savedPassword === '\''string'\'' ? savedPassword : String(savedPassword);\
+        console.log(`✅ Verified: plaintext_password saved as: ${passwordStr ? passwordStr.substring(0, 3) + '\''***'\'' : '\''NULL'\''}`);/' database.ts
+```
+
+## 2. Corriger seed-data.ts
+
+Le fichier seed-data.ts doit être entièrement remplacé. Copiez ce contenu :
+
+```bash
+cd /root/conciergerie-whatsapp-ai/backend/src
+cat > seed-data.ts << 'SEEDEOF'
 import { initDatabase } from './database';
 import dbQueries from './database';
 
@@ -164,3 +184,31 @@ async function seed() {
 }
 
 seed().catch(console.error);
+SEEDEOF
+```
+
+## 3. Corriger server.ts
+
+```bash
+# Ajouter l'import Conciergerie
+sed -i "s/import { dbQueries } from '\.\/database';/import { dbQueries, Conciergerie } from '.\/database';/" server.ts
+
+# Ajouter vérification null après ligne 405
+sed -i '/const conversation = dbQueries\.getOrCreateConversation(From, conciergerie\.id);/a\
+\
+    if (!conciergerie) {\
+      console.error('\''❌ No conciergerie found for routing'\'');\
+      res.type('\''text\/xml'\'');\
+      return res.send('\''<Response><\/Response>'\'');\
+    }' server.ts
+```
+
+## 4. Rebuild
+
+```bash
+cd /root/conciergerie-whatsapp-ai/backend
+npm run build
+```
+
+Si ça ne fonctionne toujours pas, je peux vous donner les fichiers complets corrigés.
+

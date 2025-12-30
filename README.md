@@ -320,14 +320,24 @@ Pour améliorer l'application :
 
 ## Déploiement en Production
 
-Pour déployer l'application en production, consultez le guide complet : **[DEPLOYMENT.md](./DEPLOYMENT.md)**
+Pour déployer l'application en production, consultez les guides :
 
-Le guide couvre :
-- Déploiement sur VPS (Ubuntu/Debian)
-- Configuration Nginx et SSL
-- Déploiement avec Docker
-- Déploiement sur Railway/Render
-- Scripts de déploiement automatisés
+- **[DEPLOY_SIMPLE.md](./DEPLOY_SIMPLE.md)** - Comparaison des méthodes simples ⭐
+- **[DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md)** - Guide Railway (le plus simple)
+- **[DEPLOY_AWS.md](./DEPLOY_AWS.md)** - Guide AWS (Amplify, App Runner, etc.)
+- **[DEPLOY_FLYIO.md](./DEPLOY_FLYIO.md)** - Guide Fly.io avec Dockerfiles
+- **[DEPLOYMENT_DIGITALOCEAN.md](./DEPLOYMENT_DIGITALOCEAN.md)** - Guide DigitalOcean
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guide général (VPS, PM2, etc.)
+
+### Options de déploiement disponibles :
+- **Railway** (le plus simple, ~$5-20/mois) ⭐ Recommandé
+- **AWS Amplify** (gratuit pour commencer, très simple) ⭐ Recommandé
+- **AWS App Runner** (simple, ~$7-25/mois)
+- **Render** (très simple, ~$7-25/mois)
+- **Fly.io** (avec Dockerfiles, ~$5-15/mois)
+- **DigitalOcean App Platform** (~$12-25/mois)
+- **DigitalOcean Droplet + CapRover** (~$6-12/mois)
+- **VPS classique** avec PM2
 
 ## Support
 

@@ -7,7 +7,7 @@ dotenv.config({ path: path.join(process.cwd(), '..', '.env') });
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { dbQueries } from './database';
+import { dbQueries, Conciergerie } from './database';
 import { generateAISuggestion, initClaude } from './claude';
 import { sendWhatsAppMessage, initTwilio, twilioClients } from './twilio';
 
@@ -33,8 +33,39 @@ function generateToken(): string {
 }
 
 // Health check
-app.get('/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', message: 'Server is running' });
+// Health check endpoint for production monitoring
+app.get('/health', (req: Request, res: Response) => {
+  try {
+    // Vérifier que la base de données est accessible
+    const conciergeries = dbQueries.getAllConciergeries();
+    
+    // Vérifier que la base de données répond
+    if (!conciergeries || conciergeries.length === undefined) {
+      return res.status(503).json({
+        status: 'unhealthy',
+        database: 'unavailable',
+        timestamp: new Date().toISOString()
+      });
+    }
+
+    res.json({
+      status: 'healthy',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: {
+        used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024),
+        total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024),
+        rss: Math.round(process.memoryUsage().rss / 1024 / 1024)
+      }
+    });
+  } catch (error: any) {
+    res.status(503).json({
+      status: 'unhealthy',
+      error: error.message,
+      timestamp: new Date().toISOString()
+    });
+  }
 });
 
 // Test endpoint to check WhatsApp configuration
@@ -338,14 +369,16 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
     console.log(`📋 Full request body:`, JSON.stringify(req.body, null, 2));
 
     // First, try to identify conciergerie by the destination number (To)
-    let conciergerie = dbQueries.getConciergerieByWhatsAppNumber(To);
+    let conciergerie: Conciergerie | null = dbQueries.getConciergerieByWhatsAppNumber(To);
 
     if (!conciergerie) {
       // Fallback: check phone routing table (old system)
       const conciergerieId = dbQueries.getConciergerieByPhone(From);
       if (conciergerieId) {
-        const conciergeries = dbQueries.getAllConciergeries();
-        conciergerie = conciergeries.find(c => c.id === conciergerieId) || null;
+        const foundConciergerie = dbQueries.getConciergerieById(conciergerieId);
+        if (foundConciergerie) {
+          conciergerie = foundConciergerie;
+        }
       }
     }
 
@@ -358,10 +391,24 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
         return res.send('<Response></Response>');
       }
 
-      conciergerie = conciergeries[0];
+      // Get full conciergerie data by ID
+      const firstConciergerie = dbQueries.getConciergerieById(conciergeries[0].id);
+      if (!firstConciergerie) {
+        console.error('❌ Failed to get conciergerie data');
+        res.type('text/xml');
+        return res.send('<Response></Response>');
+      }
+      conciergerie = firstConciergerie;
       console.log(`🔀 Auto-routed ${From} to conciergerie ${conciergerie.name} (ID: ${conciergerie.id})`);
     } else {
       console.log(`🔀 Message routed to ${conciergerie.name} (${To})`);
+    }
+
+    // Ensure conciergerie is not null
+    if (!conciergerie) {
+      console.error('❌ No conciergerie found for routing');
+      res.type('text/xml');
+      return res.send('<Response></Response>');
     }
 
     // Get or create conversation for this conciergerie

@@ -344,6 +344,295 @@ services:
    - **Environment** : Node
 5. Ajouter les variables d'environnement
 
+## Déploiement avec CapRover (Recommandé - Très Simple)
+
+CapRover est une plateforme auto-hébergée open-source qui transforme n'importe quel serveur en votre propre PaaS (Platform as a Service). C'est comme Heroku, mais gratuit et sur votre propre serveur.
+
+### Avantages
+- ✅ Interface graphique intuitive
+- ✅ Déploiement en un clic depuis GitHub
+- ✅ SSL automatique (Let's Encrypt)
+- ✅ Gestion des domaines facile
+- ✅ Monitoring intégré
+- ✅ Redémarrage automatique
+- ✅ Logs en temps réel
+
+### 1. Installation de CapRover sur votre VPS
+
+```bash
+# Sur votre serveur Ubuntu/Debian
+# Installer Docker (requis pour CapRover)
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Installer CapRover
+docker run -p 80:80 -p 443:443 -p 3000:3000 -v /var/run/docker.sock:/var/run/docker.sock -v /captain:/captain caprover/caprover
+
+# Accéder à l'interface CapRover
+# Ouvrir http://votre-ip-serveur dans votre navigateur
+```
+
+### 2. Configuration Initiale
+
+1. Accéder à `http://votre-ip-serveur` ou `http://captain.caprover.votre-domaine.com`
+2. Suivre l'assistant de configuration
+3. Définir un mot de passe admin
+4. Configurer votre domaine (optionnel mais recommandé)
+
+### 3. Créer les Applications
+
+#### Application Backend
+
+1. Dans CapRover, cliquer sur **Apps** > **One-Click Apps/Databases** > **Create New App**
+2. Nommer l'app : `conciergerie-backend`
+3. Cliquer sur **App Configs** > **Deployment**
+4. Méthode : **GitHub**
+5. Connecter votre repository GitHub
+6. Branch : `main`
+7. Dockerfile Location : `backend/Dockerfile`
+
+**Créer `backend/Dockerfile`** :
+
+```dockerfile
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copier les fichiers de dépendances
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copier le code source
+COPY . .
+
+# Build l'application
+RUN npm run build
+
+# Exposer le port
+EXPOSE 3000
+
+# Commande de démarrage
+CMD ["node", "dist/server.js"]
+```
+
+8. Dans **App Configs** > **Environment Variables**, ajouter :
+   ```
+   TWILIO_ACCOUNT_SID=your_account_sid
+   TWILIO_AUTH_TOKEN=your_auth_token
+   TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
+   ANTHROPIC_API_KEY=your_api_key
+   PORT=3000
+   NODE_ENV=production
+   ADMIN_EMAIL=admin@example.com
+   ADMIN_PASSWORD=your_secure_password
+   ```
+
+9. Dans **HTTP Settings**, activer **HTTPS** (SSL automatique)
+10. Cliquer sur **Save & Update**
+
+#### Application Frontend Conciergerie
+
+1. Créer une nouvelle app : `conciergerie-frontend`
+2. Méthode : **GitHub**
+3. Dockerfile Location : `frontend/Dockerfile`
+
+**Créer `frontend/Dockerfile`** :
+
+```dockerfile
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY <<EOF /etc/nginx/conf.d/default.conf
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://conciergerie-backend:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+```
+
+4. Activer HTTPS
+5. **Save & Update**
+
+#### Application Frontend Admin
+
+1. Créer une nouvelle app : `conciergerie-admin`
+2. Même processus que le frontend conciergerie
+3. Dockerfile Location : `frontend-admin/Dockerfile`
+
+**Créer `frontend-admin/Dockerfile`** (identique au frontend mais pour `frontend-admin`) :
+
+```dockerfile
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM nginx:alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+COPY <<EOF /etc/nginx/conf.d/default.conf
+server {
+    listen 80;
+    server_name _;
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    location /api {
+        proxy_pass http://conciergerie-backend:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+EOF
+```
+
+### 4. Configuration des Domaines
+
+Dans chaque application :
+1. Aller dans **HTTP Settings**
+2. Ajouter votre domaine (ex: `app.votre-domaine.com`)
+3. CapRover configure automatiquement SSL avec Let's Encrypt
+
+### 5. Persistance de la Base de Données
+
+Pour que la base de données SQLite persiste :
+
+1. Dans l'app backend, aller dans **App Configs** > **Volumes**
+2. Ajouter un volume :
+   - **Host Path** : `/captain/data/conciergerie-backend`
+   - **Container Path** : `/app/concierge.db`
+3. Sauvegarder
+
+### 6. Mise à Jour Automatique
+
+CapRover peut mettre à jour automatiquement depuis GitHub :
+1. Dans **App Configs** > **Deployment**
+2. Activer **Automatic Deployment**
+3. À chaque push sur `main`, l'app se met à jour automatiquement
+
+### Avantages de CapRover
+
+- 🚀 Déploiement en quelques minutes
+- 🔒 SSL automatique
+- 📊 Monitoring intégré
+- 🔄 Redéploiement automatique depuis GitHub
+- 💰 Gratuit (juste le coût du VPS)
+- 🛠️ Interface graphique intuitive
+
+## Déploiement avec GitHub Actions (CI/CD Automatique)
+
+Cette méthode automatise complètement le déploiement à chaque push sur GitHub.
+
+### 1. Créer le Workflow GitHub Actions
+
+Créer `.github/workflows/deploy.yml` :
+
+```yaml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+    
+    - name: Build Backend
+      run: |
+        cd backend
+        npm ci
+        npm run build
+    
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm ci
+        npm run build
+    
+    - name: Build Frontend Admin
+      run: |
+        cd frontend-admin
+        npm ci
+        npm run build
+    
+    - name: Deploy to Server
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd /var/www/conciergerie-whatsapp-ai
+          git pull origin main
+          cd backend && npm ci && npm run build
+          cd ../frontend && npm ci && npm run build
+          cd ../frontend-admin && npm ci && npm run build
+          pm2 restart conciergerie-backend
+```
+
+### 2. Configurer les Secrets GitHub
+
+Dans votre repository GitHub :
+1. Aller dans **Settings** > **Secrets and variables** > **Actions**
+2. Ajouter :
+   - `SSH_HOST` : IP de votre serveur
+   - `SSH_USER` : utilisateur SSH (ex: `root` ou `ubuntu`)
+   - `SSH_KEY` : clé privée SSH
+
+### 3. Utilisation
+
+À chaque push sur `main`, l'application se déploie automatiquement !
+
+## Comparaison des Méthodes
+
+| Méthode | Difficulté | Coût | Automatisation | Recommandé pour |
+|---------|-----------|------|----------------|-----------------|
+| **VPS + PM2** | ⭐⭐⭐ | 5-20€/mois | Manuel | Contrôle total |
+| **CapRover** | ⭐⭐ | 5-20€/mois | Auto (GitHub) | Simplicité + Contrôle |
+| **Railway/Render** | ⭐ | Variable | Auto | Démarrage rapide |
+| **Docker Compose** | ⭐⭐⭐ | 5-20€/mois | Manuel | Environnements isolés |
+| **GitHub Actions** | ⭐⭐ | Gratuit | Auto | CI/CD professionnel |
+
 ## Mise à Jour de l'Application
 
 ```bash
