@@ -71,9 +71,18 @@ function WhatsAppConfig({ conciergerie, onUpdate }: WhatsAppConfigProps) {
       conciergerie.twilio_auth_token = twilioToken;
 
       onUpdate(); // Refresh parent component
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating WhatsApp config:', error);
-      alert('Erreur lors de la mise à jour de la configuration WhatsApp');
+      
+      // If unauthorized, suggest re-login
+      if (error.response?.status === 401) {
+        alert('Votre session a expiré. Veuillez rafraîchir la page et vous reconnecter.');
+        // Clear token and reload page
+        localStorage.removeItem('adminToken');
+        window.location.reload();
+      } else {
+        alert('Erreur lors de la mise à jour de la configuration WhatsApp');
+      }
     } finally {
       setIsSubmitting(false);
     }

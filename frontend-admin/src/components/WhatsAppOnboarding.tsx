@@ -190,7 +190,16 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
     } catch (error: any) {
       console.error('Error saving Twilio config:', error);
       const errorMessage = error.response?.data?.error || error.message || 'Erreur inconnue';
-      alert(`Erreur lors de l'enregistrement de la configuration Twilio: ${errorMessage}`);
+      
+      // If unauthorized, suggest re-login
+      if (error.response?.status === 401) {
+        alert('Votre session a expiré. Veuillez rafraîchir la page et vous reconnecter.');
+        // Clear token and reload page
+        localStorage.removeItem('adminToken');
+        window.location.reload();
+      } else {
+        alert(`Erreur lors de l'enregistrement de la configuration Twilio: ${errorMessage}`);
+      }
     } finally {
       setIsSubmittingConfig(false);
     }

@@ -56,15 +56,40 @@ function App() {
           // Session is valid, set token in state
           setAdminToken(token);
         })
-        .catch(() => {
-          // Session invalid, clear token
+        .catch((error) => {
+          // Session invalid (server restarted or token expired)
+          console.warn('Admin session expired, clearing token');
           setAdminToken(null);
           localStorage.removeItem('adminToken');
           delete axios.defaults.headers.common['Authorization'];
+          // Optionally: show a message to the user
+          alert('Votre session a expiré. Veuillez vous reconnecter.');
         });
     } else {
       delete axios.defaults.headers.common['Authorization'];
     }
+  }, []);
+
+  // Add axios interceptor to handle 401 errors globally
+  useEffect(() => {
+    const interceptor = axios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401 && error.config?.url?.includes('/api/admin/')) {
+          // Token expired or invalid
+          console.warn('Received 401 error, clearing admin token');
+          setAdminToken(null);
+          localStorage.removeItem('adminToken');
+          delete axios.defaults.headers.common['Authorization'];
+          // Don't show alert here as it might be called multiple times
+        }
+        return Promise.reject(error);
+      }
+    );
+
+    return () => {
+      axios.interceptors.response.eject(interceptor);
+    };
   }, []);
 
   // Update axios headers when adminToken changes
