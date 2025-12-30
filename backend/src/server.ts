@@ -1105,6 +1105,36 @@ app.get('/api/feature-requests', (_req: Request, res: Response) => {
   }
 });
 
+// API: Initialize database with seed data (public endpoint for setup)
+app.post('/api/setup/seed', async (req: Request, res: Response) => {
+  try {
+    // Check if data already exists
+    const existingConciergeries = dbQueries.getAllConciergeries();
+    if (existingConciergeries.length > 0) {
+      return res.status(403).json({ 
+        error: 'Database already has data. Use admin endpoint to manage data.',
+        existingCount: existingConciergeries.length
+      });
+    }
+
+    // Import and run seed function
+    const { default: seed } = await import('./seed-data');
+    await seed();
+    
+    res.json({ 
+      success: true, 
+      message: 'Database seeded successfully with test data',
+      conciergeries: [
+        { email: 'parc@conciergerie.fr', password: 'parc123' },
+        { email: 'jardins@conciergerie.fr', password: 'jardins123' }
+      ]
+    });
+  } catch (error: any) {
+    console.error('Error seeding database:', error);
+    res.status(500).json({ error: 'Failed to seed database', message: error.message });
+  }
+});
+
 // API: Create feature request (admin - no auth required)
 app.post('/api/admin/feature-requests', (req: Request, res: Response) => {
   try {
