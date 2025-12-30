@@ -535,7 +535,16 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
           // If Twilio client is not initialized, try to initialize it now
           if (!twilioClients.has(conciergerie.id)) {
             console.log(`⚠️  Twilio client not initialized for conciergerie ${conciergerie.id}, attempting to initialize...`);
-            const conciergerieWithSecrets = dbQueries.getConciergerieById(conciergerie.id);
+            // Use getAllConciegeriesWithSecrets to get the secrets
+            const allConciergeries = dbQueries.getAllConciegeriesWithSecrets();
+            const conciergerieWithSecrets = allConciergeries.find(c => c.id === conciergerie.id);
+            console.log(`🔍 Looking for conciergerie ${conciergerie.id} in ${allConciergeries.length} conciergeries`);
+            console.log(`🔍 Found conciergerie: ${conciergerieWithSecrets ? 'YES' : 'NO'}`);
+            if (conciergerieWithSecrets) {
+              console.log(`🔍 Has Account SID: ${!!conciergerieWithSecrets.twilio_account_sid}`);
+              console.log(`🔍 Has Auth Token: ${!!conciergerieWithSecrets.twilio_auth_token}`);
+              console.log(`🔍 Has WhatsApp Number: ${!!conciergerieWithSecrets.whatsapp_number}`);
+            }
             if (conciergerieWithSecrets && conciergerieWithSecrets.twilio_account_sid && conciergerieWithSecrets.twilio_auth_token) {
               try {
                 const { initTwilioForConciergerie } = require('./twilio');
