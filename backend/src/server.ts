@@ -367,10 +367,23 @@ function requireAuth(req: Request, res: Response, next: any) {
 
 // Middleware to check authentication for admin routes
 function requireAdminAuth(req: Request, res: Response, next: any) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.replace('Bearer ', '');
 
-  if (!token || !adminSessions.has(token)) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (!authHeader) {
+    console.error('❌ No Authorization header provided');
+    return res.status(401).json({ error: 'Unauthorized: No authorization header' });
+  }
+
+  if (!token) {
+    console.error('❌ No token found in Authorization header');
+    return res.status(401).json({ error: 'Unauthorized: No token provided' });
+  }
+
+  if (!adminSessions.has(token)) {
+    console.error(`❌ Token not found in admin sessions. Token: ${token.substring(0, 10)}...`);
+    console.error(`📋 Current admin sessions: ${Array.from(adminSessions.keys()).length} active`);
+    return res.status(401).json({ error: 'Unauthorized: Invalid or expired token' });
   }
 
   (req as any).adminSession = adminSessions.get(token);

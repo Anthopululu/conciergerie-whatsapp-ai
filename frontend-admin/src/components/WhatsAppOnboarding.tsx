@@ -147,10 +147,22 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
         ? numberToSave
         : `whatsapp:${numberToSave}`;
 
+      // Ensure we have the admin token in headers
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        alert('Erreur: Vous devez être connecté en tant qu\'administrateur');
+        setIsSubmittingConfig(false);
+        return;
+      }
+
       await axios.patch(`/api/admin/conciergeries/${conciergerieId}/whatsapp`, {
         whatsapp_number: formattedNumber,
         twilio_account_sid: twilioSid.trim(),
         twilio_auth_token: twilioToken.trim(),
+      }, {
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
       });
 
       setSuccessMessage('Configuration Twilio enregistrée avec succès !');

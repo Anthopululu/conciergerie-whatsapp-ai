@@ -44,10 +44,22 @@ function WhatsAppConfig({ conciergerie, onUpdate }: WhatsAppConfigProps) {
         ? whatsappNumber
         : `whatsapp:${whatsappNumber}`;
 
+      // Ensure we have the admin token in headers
+      const adminToken = localStorage.getItem('adminToken');
+      if (!adminToken) {
+        alert('Erreur: Vous devez être connecté en tant qu\'administrateur');
+        setIsSubmitting(false);
+        return;
+      }
+
       await axios.patch(`/api/admin/conciergeries/${conciergerie.id}/whatsapp`, {
         whatsapp_number: formattedNumber,
         twilio_account_sid: twilioSid,
         twilio_auth_token: twilioToken,
+      }, {
+        headers: {
+          'Authorization': `Bearer ${adminToken}`
+        }
       });
 
       alert('Configuration WhatsApp mise à jour avec succès !');
