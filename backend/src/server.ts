@@ -154,6 +154,32 @@ app.get('/api/test/claude-config', async (_req: Request, res: Response) => {
 
 // AUTHENTICATION ENDPOINTS
 
+// API: Create conciergerie (public endpoint for initial setup - remove in production)
+app.post('/api/setup/conciergerie', (req: Request, res: Response) => {
+  try {
+    const { name, email, password } = req.body;
+
+    if (!name || !email || !password) {
+      return res.status(400).json({ error: 'Name, email and password are required' });
+    }
+
+    // Check if any conciergerie already exists
+    const existingConciergeries = dbQueries.getAllConciergeries();
+    if (existingConciergeries.length > 0) {
+      return res.status(403).json({ error: 'Conciergerie already exists. Use admin endpoint to create more.' });
+    }
+
+    const conciergerie = dbQueries.createConciergerie(name, email, password);
+    res.json({ success: true, conciergerie: { id: conciergerie.id, name: conciergerie.name, email: conciergerie.email } });
+  } catch (error: any) {
+    console.error('Error creating conciergerie:', error);
+    if (error.message && error.message.includes('UNIQUE')) {
+      return res.status(409).json({ error: 'Email already exists' });
+    }
+    res.status(500).json({ error: 'Failed to create conciergerie' });
+  }
+});
+
 // API: Create conciergerie (for admin/setup)
 app.post('/api/admin/conciergeries', requireAdminAuth, (req: Request, res: Response) => {
   try {
