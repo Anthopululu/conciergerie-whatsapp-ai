@@ -1,0 +1,24 @@
+{
+  "name": "conciergerie-whatsapp-ai",
+  "version": "1.0.0",
+  "description": "Application multi-conciergerie avec WhatsApp, IA Claude et gestion de FAQs",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend",
+    "frontend-admin"
+  ],
+  "scripts": {
+    "install:all": "cd backend && npm install && cd ../frontend && npm install && cd ../frontend-admin && npm install",
+    "dev": "concurrently \"cd backend && npm run dev\" \"cd frontend && npm run dev\" \"cd frontend-admin && npm run dev\"",
+    "build": "cd backend && npm run build && cd ../frontend && npm run build && cd ../frontend-admin && npm run build"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  }
+}
+
