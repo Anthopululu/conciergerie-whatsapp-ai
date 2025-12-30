@@ -572,7 +572,9 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
           }
         } else {
           console.warn(`⚠️  Cannot send AI response: WhatsApp number not configured for conciergerie ${conciergerie.name} (ID: ${conciergerie.id})`);
+          console.warn(`⚠️  conciergerie.whatsapp_number = ${conciergerie.whatsapp_number || 'NULL'}`);
           console.log(`💡 AI response saved to database for manual review`);
+          console.log(`💡 To fix: Configure WhatsApp in admin panel for conciergerie ${conciergerie.id}`);
         }
       } catch (error: any) {
         console.error('❌ Error in AI auto-response:', error);
