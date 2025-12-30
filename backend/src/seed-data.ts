@@ -163,4 +163,11 @@ async function seed() {
   console.log('  Domaine des Jardins:   +33645678901, +33656789012, +33667890123');
 }
 
-seed().catch(console.error);
+// Export as default for dynamic import
+export default seed;
+
+// Only run if called directly (not imported)
+// Check if this file is being run directly (not imported)
+if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('seed-data.ts')) {
+  seed().catch(console.error);
+}
