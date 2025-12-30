@@ -1164,8 +1164,11 @@ app.listen(PORT, () => {
       const conciergeries = dbQueries.getAllConciergeries();
       if (conciergeries.length === 0) {
         console.log('⚠️  No conciergeries found. Creating default conciergerie...');
-        dbQueries.createConciergerie('Conciergerie Demo', 'demo@example.com', 'demo123');
+        const demo = dbQueries.createConciergerie('Conciergerie Demo', 'demo@example.com', 'demo123');
         console.log('✅ Default conciergerie created: demo@example.com / demo123');
+        // Also create a main conciergerie
+        const main = dbQueries.createConciergerie('Conciergerie Principale', 'conciergerie@example.com', 'concierge123');
+        console.log('✅ Main conciergerie created: conciergerie@example.com / concierge123');
       } else {
         console.log(`ℹ️  ${conciergeries.length} conciergerie(s) already exist`);
 
