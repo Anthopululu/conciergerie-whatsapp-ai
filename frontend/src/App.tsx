@@ -8,7 +8,21 @@ import FAQ from './components/FAQ';
 import './App.css';
 
 // Configure axios base URL from environment variable or default to localhost for dev
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+const getApiUrl = () => {
+  // @ts-ignore - Vite replaces import.meta.env at build time
+  if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) {
+    // @ts-ignore
+    return import.meta.env.VITE_API_URL;
+  }
+  // Fallback: check window location for production
+  if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+    // If we're on Render, use the backend URL
+    return 'https://conciergerie-whatsapp-ai.onrender.com';
+  }
+  return 'http://localhost:3000';
+};
+
+const API_URL = getApiUrl();
 axios.defaults.baseURL = API_URL;
 
 // Setup axios interceptor for auth token
