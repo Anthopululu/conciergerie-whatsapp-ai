@@ -111,10 +111,10 @@ function Conciergeries({ conciergeries, onCreateConciergerie, onUpdateConcierger
     }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert('Copié dans le presse-papier !');
-  };
+  // const copyToClipboard = (text: string) => {
+  //   navigator.clipboard.writeText(text);
+  //   alert('Copié dans le presse-papier !');
+  // };
 
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);

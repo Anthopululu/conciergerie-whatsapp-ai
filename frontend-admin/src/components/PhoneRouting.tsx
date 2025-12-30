@@ -28,8 +28,8 @@ interface ConciergerieFull {
 interface PhoneRoutingProps {
   conciergerieId: number | null;
   conciergeries: ConciergerieFull[];
-  onUpdateJoinCode: (id: number, code: string) => Promise<void>;
-  onRefresh: () => Promise<void>;
+  onUpdateJoinCode: (id: number, code: string) => Promise<boolean>;
+  onRefresh: () => void;
 }
 
 function PhoneRouting({ conciergerieId, conciergeries: allConciergeries, onUpdateJoinCode, onRefresh }: PhoneRoutingProps) {
@@ -159,7 +159,11 @@ function PhoneRouting({ conciergerieId, conciergeries: allConciergeries, onUpdat
           conciergerieId={conciergerieId || 'all'}
           conciergeries={allConciergeries}
           onUpdateJoinCode={async (id: number, code: string) => {
-            await onUpdateJoinCode(id, code);
+            const success = await onUpdateJoinCode(id, code);
+            if (success) {
+              onRefresh();
+            }
+            return success;
           }}
           onRefresh={onRefresh}
         />
