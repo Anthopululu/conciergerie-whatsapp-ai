@@ -1,0 +1,90 @@
+name: CI - Build and Test
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd backend
+          npm ci
+      
+      - name: Build
+        run: |
+          cd backend
+          npm run build
+      
+      - name: Check build output
+        run: |
+          test -f backend/dist/server.js || exit 1
+          echo "✅ Backend build successful"
+
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+      
+      - name: Build
+        run: |
+          cd frontend
+          npm run build
+      
+      - name: Check build output
+        run: |
+          test -d frontend/dist || exit 1
+          echo "✅ Frontend build successful"
+
+  build-frontend-admin:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend-admin/package-lock.json
+      
+      - name: Install dependencies
+        run: |
+          cd frontend-admin
+          npm ci
+      
+      - name: Build
+        run: |
+          cd frontend-admin
+          npm run build
+      
+      - name: Check build output
+        run: |
+          test -d frontend-admin/dist || exit 1
+          echo "✅ Frontend-admin build successful"
+

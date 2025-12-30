@@ -1,0 +1,57 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: |
+          backend/package-lock.json
+          frontend/package-lock.json
+          frontend-admin/package-lock.json
+    
+    - name: Build Backend
+      run: |
+        cd backend
+        npm ci
+        npm run build
+    
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm ci
+        npm run build
+    
+    - name: Build Frontend Admin
+      run: |
+        cd frontend-admin
+        npm ci
+        npm run build
+    
+    - name: Deploy to Server
+      uses: appleboy/ssh-action@master
+      if: github.ref == 'refs/heads/main'
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_KEY }}
+        script: |
+          cd /var/www/conciergerie-whatsapp-ai
+          git pull origin main
+          cd backend && npm ci && npm run build
+          cd ../frontend && npm ci && npm run build
+          cd ../frontend-admin && npm ci && npm run build
+          pm2 restart conciergerie-backend || pm2 start ecosystem.config.js
+
+
