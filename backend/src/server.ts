@@ -759,6 +759,224 @@ app.delete('/api/faqs/:id', requireAuth, (req: Request, res: Response) => {
   }
 });
 
+// API: Get statistics
+app.get('/api/statistics', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const stats = dbQueries.getStatistics(conciergerieId);
+    res.json(stats);
+  } catch (error) {
+    console.error('Error fetching statistics:', error);
+    res.status(500).json({ error: 'Failed to fetch statistics' });
+  }
+});
+
+// API: Search conversations
+app.get('/api/search', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const query = req.query.q as string;
+
+    if (!query || query.trim().length === 0) {
+      return res.status(400).json({ error: 'Search query is required' });
+    }
+
+    const conversations = dbQueries.searchConversations(conciergerieId, query.trim());
+    res.json(conversations);
+  } catch (error) {
+    console.error('Error searching conversations:', error);
+    res.status(500).json({ error: 'Failed to search conversations' });
+  }
+});
+
+// API: Get response templates
+app.get('/api/templates', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const templates = dbQueries.getResponseTemplates(conciergerieId);
+    res.json(templates);
+  } catch (error) {
+    console.error('Error fetching templates:', error);
+    res.status(500).json({ error: 'Failed to fetch templates' });
+  }
+});
+
+// API: Create response template
+app.post('/api/templates', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const { name, content } = req.body;
+
+    if (!name || !content) {
+      return res.status(400).json({ error: 'Name and content are required' });
+    }
+
+    const template = dbQueries.addResponseTemplate(conciergerieId, name, content);
+    res.json({ success: true, template });
+  } catch (error) {
+    console.error('Error creating template:', error);
+    res.status(500).json({ error: 'Failed to create template' });
+  }
+});
+
+// API: Update response template
+app.patch('/api/templates/:id', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const id = parseInt(req.params.id);
+    const { name, content } = req.body;
+
+    if (!name || !content) {
+      return res.status(400).json({ error: 'Name and content are required' });
+    }
+
+    dbQueries.updateResponseTemplate(id, conciergerieId, name, content);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error updating template:', error);
+    res.status(500).json({ error: 'Failed to update template' });
+  }
+});
+
+// API: Delete response template
+app.delete('/api/templates/:id', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const id = parseInt(req.params.id);
+    dbQueries.deleteResponseTemplate(id, conciergerieId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting template:', error);
+    res.status(500).json({ error: 'Failed to delete template' });
+  }
+});
+
+// API: Get conversation tags
+app.get('/api/conversations/:id/tags', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const conversationId = parseInt(req.params.id);
+
+    const conversation = dbQueries.getConversationById(conversationId);
+    if (!conversation || conversation.conciergerie_id !== conciergerieId) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    const tags = dbQueries.getConversationTags(conversationId);
+    res.json(tags);
+  } catch (error) {
+    console.error('Error fetching tags:', error);
+    res.status(500).json({ error: 'Failed to fetch tags' });
+  }
+});
+
+// API: Add conversation tag
+app.post('/api/conversations/:id/tags', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const conversationId = parseInt(req.params.id);
+    const { tag } = req.body;
+
+    if (!tag || tag.trim().length === 0) {
+      return res.status(400).json({ error: 'Tag is required' });
+    }
+
+    const conversation = dbQueries.getConversationById(conversationId);
+    if (!conversation || conversation.conciergerie_id !== conciergerieId) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    dbQueries.addConversationTag(conversationId, tag.trim());
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error adding tag:', error);
+    res.status(500).json({ error: 'Failed to add tag' });
+  }
+});
+
+// API: Remove conversation tag
+app.delete('/api/conversations/:id/tags/:tag', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const conversationId = parseInt(req.params.id);
+    const tag = decodeURIComponent(req.params.tag);
+
+    const conversation = dbQueries.getConversationById(conversationId);
+    if (!conversation || conversation.conciergerie_id !== conciergerieId) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    dbQueries.removeConversationTag(conversationId, tag);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error removing tag:', error);
+    res.status(500).json({ error: 'Failed to remove tag' });
+  }
+});
+
+// API: Get conversation notes
+app.get('/api/conversations/:id/notes', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const conversationId = parseInt(req.params.id);
+
+    const conversation = dbQueries.getConversationById(conversationId);
+    if (!conversation || conversation.conciergerie_id !== conciergerieId) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    const notes = dbQueries.getConversationNotes(conversationId);
+    res.json(notes);
+  } catch (error) {
+    console.error('Error fetching notes:', error);
+    res.status(500).json({ error: 'Failed to fetch notes' });
+  }
+});
+
+// API: Add conversation note
+app.post('/api/conversations/:id/notes', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const conversationId = parseInt(req.params.id);
+    const { note } = req.body;
+
+    if (!note || note.trim().length === 0) {
+      return res.status(400).json({ error: 'Note is required' });
+    }
+
+    const conversation = dbQueries.getConversationById(conversationId);
+    if (!conversation || conversation.conciergerie_id !== conciergerieId) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    const newNote = dbQueries.addConversationNote(conversationId, note.trim());
+    res.json({ success: true, note: newNote });
+  } catch (error) {
+    console.error('Error adding note:', error);
+    res.status(500).json({ error: 'Failed to add note' });
+  }
+});
+
+// API: Delete conversation note
+app.delete('/api/conversations/:id/notes/:noteId', requireAuth, (req: Request, res: Response) => {
+  try {
+    const { conciergerieId } = (req as any).session;
+    const conversationId = parseInt(req.params.id);
+    const noteId = parseInt(req.params.noteId);
+
+    const conversation = dbQueries.getConversationById(conversationId);
+    if (!conversation || conversation.conciergerie_id !== conciergerieId) {
+      return res.status(404).json({ error: 'Conversation not found' });
+    }
+
+    dbQueries.deleteConversationNote(noteId, conversationId);
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting note:', error);
+    res.status(500).json({ error: 'Failed to delete note' });
+  }
+});
+
 // ADMIN API ENDPOINTS (protected with requireAdminAuth)
 
 // API: Get ALL conversations (for admin)

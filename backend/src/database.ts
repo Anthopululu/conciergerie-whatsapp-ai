@@ -85,6 +85,33 @@ async function initDatabase() {
       FOREIGN KEY (conciergerie_id) REFERENCES conciergeries(id)
     );
 
+    CREATE TABLE IF NOT EXISTS response_templates (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conciergerie_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      content TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (conciergerie_id) REFERENCES conciergeries(id)
+    );
+
+    CREATE TABLE IF NOT EXISTS conversation_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id INTEGER NOT NULL,
+      tag TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (conversation_id) REFERENCES conversations(id),
+      UNIQUE(conversation_id, tag)
+    );
+
+    CREATE TABLE IF NOT EXISTS conversation_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      conversation_id INTEGER NOT NULL,
+      note TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (conversation_id) REFERENCES conversations(id)
+    );
+
     CREATE INDEX IF NOT EXISTS idx_conversations_phone ON conversations(phone_number);
     CREATE INDEX IF NOT EXISTS idx_conversations_conciergerie ON conversations(conciergerie_id);
     CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
@@ -882,6 +909,222 @@ export const dbQueries = {
 
   deletePhoneRouting(phoneNumber: string): void {
     db.run('DELETE FROM phone_routing WHERE phone_number = ?', [phoneNumber]);
+    saveDatabase();
+  },
+
+  // Statistics
+  getStatistics(conciergerieId: number): {
+    totalConversations: number;
+    totalMessages: number;
+    aiMessages: number;
+    humanMessages: number;
+    avgResponseTime: number;
+    conversationsToday: number;
+    messagesToday: number;
+  } {
+    const conversations = db.exec(
+      'SELECT COUNT(*) FROM conversations WHERE conciergerie_id = ?',
+      [conciergerieId]
+    );
+    const totalConversations = conversations[0]?.values[0]?.[0] as number || 0;
+
+    const messages = db.exec(
+      'SELECT COUNT(*), SUM(CASE WHEN is_ai = 1 THEN 1 ELSE 0 END), SUM(CASE WHEN is_ai = 0 AND sender = "concierge" THEN 1 ELSE 0 END) FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE conciergerie_id = ?)',
+      [conciergerieId]
+    );
+    const totalMessages = messages[0]?.values[0]?.[0] as number || 0;
+    const aiMessages = messages[0]?.values[0]?.[1] as number || 0;
+    const humanMessages = messages[0]?.values[0]?.[2] as number || 0;
+
+    // Calculate average response time (simplified - time between client message and concierge response)
+    const responseTimes = db.exec(`
+      SELECT AVG(
+        (julianday(m2.created_at) - julianday(m1.created_at)) * 24 * 60
+      ) as avg_minutes
+      FROM messages m1
+      JOIN messages m2 ON m1.conversation_id = m2.conversation_id
+      WHERE m1.sender = 'client'
+        AND m2.sender = 'concierge'
+        AND m2.created_at > m1.created_at
+        AND m1.conversation_id IN (SELECT id FROM conversations WHERE conciergerie_id = ?)
+        AND NOT EXISTS (
+          SELECT 1 FROM messages m3
+          WHERE m3.conversation_id = m1.conversation_id
+            AND m3.sender = 'concierge'
+            AND m3.created_at > m1.created_at
+            AND m3.created_at < m2.created_at
+        )
+    `, [conciergerieId]);
+    const avgResponseTime = responseTimes[0]?.values[0]?.[0] as number || 0;
+
+    const today = new Date().toISOString().split('T')[0];
+    const conversationsTodayResult = db.exec(
+      'SELECT COUNT(*) FROM conversations WHERE conciergerie_id = ? AND DATE(created_at) = ?',
+      [conciergerieId, today]
+    );
+    const conversationsToday = conversationsTodayResult[0]?.values[0]?.[0] as number || 0;
+
+    const messagesTodayResult = db.exec(
+      'SELECT COUNT(*) FROM messages WHERE conversation_id IN (SELECT id FROM conversations WHERE conciergerie_id = ?) AND DATE(created_at) = ?',
+      [conciergerieId, today]
+    );
+    const messagesToday = messagesTodayResult[0]?.values[0]?.[0] as number || 0;
+
+    return {
+      totalConversations,
+      totalMessages,
+      aiMessages,
+      humanMessages,
+      avgResponseTime: Math.round(avgResponseTime * 100) / 100,
+      conversationsToday,
+      messagesToday,
+    };
+  },
+
+  // Search conversations and messages
+  searchConversations(conciergerieId: number, query: string): Conversation[] {
+    const searchTerm = `%${query}%`;
+    const result = db.exec(`
+      SELECT DISTINCT c.* FROM conversations c
+      LEFT JOIN messages m ON c.id = m.conversation_id
+      WHERE c.conciergerie_id = ?
+        AND (
+          c.phone_number LIKE ? OR
+          m.message LIKE ?
+        )
+      ORDER BY c.last_message_at DESC
+    `, [conciergerieId, searchTerm, searchTerm]);
+
+    if (result.length === 0) return [];
+
+    return result[0].values.map((row: any) => ({
+      id: row[0] as number,
+      conciergerie_id: row[1] as number,
+      phone_number: row[2] as string,
+      ai_auto_reply: (row[5] as number) ?? 1,
+      created_at: row[3] as string,
+      last_message_at: row[4] as string,
+    }));
+  },
+
+  // Response templates
+  getResponseTemplates(conciergerieId: number): Array<{ id: number; name: string; content: string; created_at: string }> {
+    const result = db.exec(
+      'SELECT id, name, content, created_at FROM response_templates WHERE conciergerie_id = ? ORDER BY created_at DESC',
+      [conciergerieId]
+    );
+
+    if (result.length === 0) return [];
+
+    return result[0].values.map((row: any) => ({
+      id: row[0] as number,
+      name: row[1] as string,
+      content: row[2] as string,
+      created_at: row[3] as string,
+    }));
+  },
+
+  addResponseTemplate(conciergerieId: number, name: string, content: string): { id: number; name: string; content: string; created_at: string } {
+    db.run(
+      'INSERT INTO response_templates (conciergerie_id, name, content, created_at, updated_at) VALUES (?, ?, ?, datetime("now"), datetime("now"))',
+      [conciergerieId, name, content]
+    );
+    saveDatabase();
+
+    const result = db.exec(
+      'SELECT id, name, content, created_at FROM response_templates WHERE conciergerie_id = ? AND name = ? ORDER BY id DESC LIMIT 1',
+      [conciergerieId, name]
+    );
+
+    const row = result[0].values[0];
+    return {
+      id: row[0] as number,
+      name: row[1] as string,
+      content: row[2] as string,
+      created_at: row[3] as string,
+    };
+  },
+
+  updateResponseTemplate(id: number, conciergerieId: number, name: string, content: string): void {
+    db.run(
+      'UPDATE response_templates SET name = ?, content = ?, updated_at = datetime("now") WHERE id = ? AND conciergerie_id = ?',
+      [name, content, id, conciergerieId]
+    );
+    saveDatabase();
+  },
+
+  deleteResponseTemplate(id: number, conciergerieId: number): void {
+    db.run('DELETE FROM response_templates WHERE id = ? AND conciergerie_id = ?', [id, conciergerieId]);
+    saveDatabase();
+  },
+
+  // Conversation tags
+  getConversationTags(conversationId: number): string[] {
+    const result = db.exec(
+      'SELECT tag FROM conversation_tags WHERE conversation_id = ?',
+      [conversationId]
+    );
+
+    if (result.length === 0) return [];
+
+    return result[0].values.map((row: any) => row[0] as string);
+  },
+
+  addConversationTag(conversationId: number, tag: string): void {
+    try {
+      db.run(
+        'INSERT OR IGNORE INTO conversation_tags (conversation_id, tag, created_at) VALUES (?, ?, datetime("now"))',
+        [conversationId, tag]
+      );
+      saveDatabase();
+    } catch (error) {
+      // Tag already exists, ignore
+    }
+  },
+
+  removeConversationTag(conversationId: number, tag: string): void {
+    db.run('DELETE FROM conversation_tags WHERE conversation_id = ? AND tag = ?', [conversationId, tag]);
+    saveDatabase();
+  },
+
+  // Conversation notes
+  getConversationNotes(conversationId: number): Array<{ id: number; note: string; created_at: string }> {
+    const result = db.exec(
+      'SELECT id, note, created_at FROM conversation_notes WHERE conversation_id = ? ORDER BY created_at DESC',
+      [conversationId]
+    );
+
+    if (result.length === 0) return [];
+
+    return result[0].values.map((row: any) => ({
+      id: row[0] as number,
+      note: row[1] as string,
+      created_at: row[2] as string,
+    }));
+  },
+
+  addConversationNote(conversationId: number, note: string): { id: number; note: string; created_at: string } {
+    db.run(
+      'INSERT INTO conversation_notes (conversation_id, note, created_at) VALUES (?, ?, datetime("now"))',
+      [conversationId, note]
+    );
+    saveDatabase();
+
+    const result = db.exec(
+      'SELECT id, note, created_at FROM conversation_notes WHERE conversation_id = ? ORDER BY id DESC LIMIT 1',
+      [conversationId]
+    );
+
+    const row = result[0].values[0];
+    return {
+      id: row[0] as number,
+      note: row[1] as string,
+      created_at: row[2] as string,
+    };
+  },
+
+  deleteConversationNote(noteId: number, conversationId: number): void {
+    db.run('DELETE FROM conversation_notes WHERE id = ? AND conversation_id = ?', [noteId, conversationId]);
     saveDatabase();
   },
 

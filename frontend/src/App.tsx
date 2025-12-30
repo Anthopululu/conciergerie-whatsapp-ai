@@ -5,6 +5,7 @@ import ConversationList from './components/ConversationList';
 import ChatWindow from './components/ChatWindow';
 import Login from './components/Login';
 import FAQ from './components/FAQ';
+import Statistics from './components/Statistics';
 import './App.css';
 
 // Configure axios base URL from environment variable or default to localhost for dev
@@ -35,11 +36,12 @@ const setupAxiosInterceptor = (token: string | null) => {
 };
 
 function App() {
-  const [activeTab, setActiveTab] = useState<'conversations' | 'faq'>('conversations');
+  const [activeTab, setActiveTab] = useState<'conversations' | 'faq' | 'statistics'>('conversations');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [conciergerie, setConciergerie] = useState<{ id: number; name: string; email: string } | null>(null);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [displayedConversations, setDisplayedConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [conversationAutoReply, setConversationAutoReply] = useState<Record<number, number>>({});
@@ -277,6 +279,12 @@ function App() {
           >
             ❓ FAQ
           </button>
+          <button
+            className={`tab-btn ${activeTab === 'statistics' ? 'active' : ''}`}
+            onClick={() => setActiveTab('statistics')}
+          >
+            📊 Statistiques
+          </button>
         </div>
 
         <button className="feature-request-btn" onClick={() => setShowFeatureRequestModal(true)}>
@@ -285,14 +293,17 @@ function App() {
 
         {activeTab === 'conversations' && (
           <ConversationList
-            conversations={conversations}
+            conversations={displayedConversations}
             selectedConversation={selectedConversation}
             onSelectConversation={handleSelectConversation}
+            onSearchResults={setDisplayedConversations}
           />
         )}
       </div>
       <div className="main-content">
-        {activeTab === 'conversations' ? (
+        {activeTab === 'statistics' ? (
+          <Statistics />
+        ) : activeTab === 'conversations' ? (
           selectedConversation ? (
             <ChatWindow
               conversation={selectedConversation}

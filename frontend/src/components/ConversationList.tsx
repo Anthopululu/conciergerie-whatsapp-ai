@@ -1,3 +1,5 @@
+import { useState } from 'react';
+import axios from 'axios';
 import { Conversation } from '../types';
 import './ConversationList.css';
 
@@ -5,9 +7,12 @@ interface Props {
   conversations: Conversation[];
   selectedConversation: Conversation | null;
   onSelectConversation: (conversation: Conversation) => void;
+  onSearchResults?: (conversations: Conversation[]) => void;
 }
 
-function ConversationList({ conversations, selectedConversation, onSelectConversation }: Props) {
+function ConversationList({ conversations, selectedConversation, onSelectConversation, onSearchResults }: Props) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
   const formatTime = (dateString: string) => {
     // SQLite stores dates as "YYYY-MM-DD HH:MM:SS" without timezone
     // Parse it as local time by treating it as a local datetime string
@@ -66,9 +71,45 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
     return emojis[index];
   };
 
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim().length === 0) {
+      if (onSearchResults) {
+        onSearchResults(conversations);
+      }
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const response = await axios.get(`/api/search?q=${encodeURIComponent(query)}`);
+      if (onSearchResults) {
+        onSearchResults(response.data);
+      }
+    } catch (error) {
+      console.error('Error searching:', error);
+      if (onSearchResults) {
+        onSearchResults([]);
+      }
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   return (
     <div className="conversation-list">
-      {conversations.length === 0 ? (
+      <div className="search-bar">
+        <input
+          type="text"
+          placeholder="🔍 Rechercher dans les conversations..."
+          value={searchQuery}
+          onChange={(e) => handleSearch(e.target.value)}
+          className="search-input"
+        />
+        {isSearching && <span className="search-loading">⏳</span>}
+      </div>
+      <div className="conversation-list-content">
+        {conversations.length === 0 ? (
         <div className="no-conversations">
           <p>Aucune conversation pour le moment</p>
           <p className="hint">Les messages WhatsApp apparaîtront ici</p>
@@ -92,7 +133,8 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
             </div>
           </div>
         ))
-      )}
+        )}
+      </div>
     </div>
   );
 }
