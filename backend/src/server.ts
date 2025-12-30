@@ -1118,7 +1118,8 @@ app.post('/api/setup/seed', async (req: Request, res: Response) => {
     }
 
     // Import and run seed function
-    const { default: seed } = await import('./seed-data');
+    const seedModule = await import('./seed-data');
+    const seed = seedModule.default || seedModule;
     await seed();
     
     res.json({ 

@@ -167,7 +167,7 @@ async function seed() {
 export default seed;
 
 // Only run if called directly (not imported)
-// Check if this file is being run directly (not imported)
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('seed-data.ts')) {
+// Check if this file is being run directly via tsx/node
+if (process.argv[1] && process.argv[1].endsWith('seed-data.ts')) {
   seed().catch(console.error);
 }
