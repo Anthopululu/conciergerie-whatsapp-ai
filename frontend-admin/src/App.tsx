@@ -1,6 +1,10 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { FeatureRequest, Conversation, Message } from './types';
+
+// Configure axios base URL from environment variable or default to localhost for dev
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+axios.defaults.baseURL = API_URL;
 import FeatureRequests from './components/FeatureRequests';
 import ConversationList from './components/ConversationList';
 import ChatWindow from './components/ChatWindow';

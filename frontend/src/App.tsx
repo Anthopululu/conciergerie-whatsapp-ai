@@ -7,6 +7,10 @@ import Login from './components/Login';
 import FAQ from './components/FAQ';
 import './App.css';
 
+// Configure axios base URL from environment variable or default to localhost for dev
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+axios.defaults.baseURL = API_URL;
+
 // Setup axios interceptor for auth token
 const setupAxiosInterceptor = (token: string | null) => {
   if (token) {
