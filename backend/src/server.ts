@@ -1392,8 +1392,12 @@ app.delete('/api/feature-requests/:id', (req: Request, res: Response) => {
 (async () => {
   try {
     // Initialize database first
-    console.log('🔄 Initializing database...');
-    await initDatabase();
+    console.log(`🔄 Initializing ${USE_POSTGRES ? 'PostgreSQL' : 'SQLite'} database...`);
+    if (USE_POSTGRES) {
+      await initDatabasePostgres();
+    } else {
+      await initDatabase();
+    }
     console.log('✅ Database initialized successfully');
   } catch (error) {
     console.error('❌ Failed to initialize database:', error);
