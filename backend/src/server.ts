@@ -1280,6 +1280,36 @@ app.get('/api/feature-requests', (_req: Request, res: Response) => {
   }
 });
 
+// API: Create test conversation (admin - for demo purposes)
+app.post('/api/admin/test-conversation', requireAdminAuth, async (req: Request, res: Response) => {
+  try {
+    const { phone_number, conciergerie_id, message } = req.body;
+
+    if (!phone_number || !conciergerie_id) {
+      return res.status(400).json({ error: 'phone_number and conciergerie_id are required' });
+    }
+
+    // Create conversation
+    const conversation = USE_POSTGRES
+      ? await (dbQueriesPostgres as any).getOrCreateConversationAsync(phone_number, conciergerie_id)
+      : dbQueries.getOrCreateConversation(phone_number, conciergerie_id);
+
+    // Add a test message if provided
+    if (message) {
+      if (USE_POSTGRES) {
+        await (dbQueriesPostgres as any).addMessageAsync(conversation.id, message, 'client', undefined, undefined, 0);
+      } else {
+        dbQueries.addMessage(conversation.id, 'client', message, null, 0);
+      }
+    }
+
+    res.json({ success: true, conversation });
+  } catch (error: any) {
+    console.error('Error creating test conversation:', error);
+    res.status(500).json({ error: 'Failed to create conversation', message: error.message });
+  }
+});
+
 // API: Initialize database with seed data (public endpoint for setup)
 app.post('/api/setup/seed', async (req: Request, res: Response) => {
   try {
