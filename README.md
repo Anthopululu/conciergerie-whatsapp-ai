@@ -1,23 +1,20 @@
-# Application Conciergerie WhatsApp avec IA
+# 💬 Application Conciergerie WhatsApp avec IA
 
-Application complète permettant à une conciergerie de recevoir des messages WhatsApp de clients et d'y répondre avec l'assistance de l'IA Claude.
+Application complète permettant à une conciergerie de recevoir des messages WhatsApp de clients et d'y répondre avec l'assistance de l'IA Claude 3.5 Haiku.
 
-## Fonctionnalités
+## ✨ Fonctionnalités
 
 - **Multi-conciergerie** : Support de plusieurs conciergeries avec isolation complète des données
-- **Authentification** : Système de login sécurisé avec tokens de session
-- Réception de messages WhatsApp via Twilio
-- Réponses automatiques générées par Claude 3.5 Haiku
-- **FAQ personnalisée** : Chaque conciergerie peut configurer ses propres FAQs pour des réponses contextuelles
+- **Réponses IA automatiques** : Génération automatique de réponses basées sur les FAQs configurées
+- **Mode manuel/automatique** : Basculement entre réponses IA automatiques et interventions manuelles par conversation
 - **Dashboard Conciergerie** : Interface pour gérer les conversations avec les clients
-- **Dashboard Admin** : Interface pour gérer les demandes de fonctionnalités
-- Réponses IA automatiques envoyées directement aux clients (basées sur les FAQs)
-- Possibilité d'intervention manuelle par la conciergerie
-- Historique complet des conversations dans SQLite
-- Système de feature requests pour proposer de nouvelles fonctionnalités
-- Interface temps réel avec polling automatique
+- **Dashboard Admin** : Interface pour gérer les conciergeries, FAQs, et configurations
+- **FAQs personnalisées** : Chaque conciergerie peut configurer ses propres FAQs
+- **Statistiques** : Tableau de bord avec métriques (messages, conversations, temps de réponse)
+- **Recherche** : Recherche dans les conversations et messages
+- **Historique complet** : Toutes les conversations sont sauvegardées dans SQLite
 
-## Architecture
+## 🏗️ Architecture
 
 ```
 Client WhatsApp
@@ -26,20 +23,27 @@ Twilio WhatsApp API
     ↓
 Backend (Node.js + Express)
     ├─→ Claude 3.5 Haiku (réponses automatiques avec FAQs)
-    ├─→ SQLite (multi-conciergeries, conversations, FAQs, feature requests)
-    ├─→ Dashboard Conciergerie React (port 5173) - avec authentification
+    ├─→ SQLite (multi-conciergeries, conversations, FAQs)
+    ├─→ Dashboard Conciergerie React (port 5173)
     └─→ Dashboard Admin React (port 5174)
 ```
 
-## Prérequis
+## 📋 Prérequis
 
 - Node.js 18+ installé
 - Compte Twilio avec WhatsApp configuré
 - Compte Anthropic avec clé API Claude
 
-## Installation
+## 🚀 Installation locale
 
-### 1. Installer les dépendances
+### 1. Cloner le repository
+
+```bash
+git clone https://github.com/Anthopululu/conciergerie-whatsapp-ai.git
+cd conciergerie-whatsapp-ai
+```
+
+### 2. Installer les dépendances
 
 ```bash
 # Backend
@@ -55,292 +59,169 @@ cd ../frontend-admin
 npm install
 ```
 
-### 2. Configuration
+### 3. Configuration
 
-Créer un fichier `.env` à la racine du projet avec vos credentials :
+Créer un fichier `.env` à la racine du projet :
 
-```bash
+```env
 # Twilio
 TWILIO_ACCOUNT_SID=your_account_sid
 TWILIO_AUTH_TOKEN=your_auth_token
 TWILIO_WHATSAPP_NUMBER=whatsapp:+14155238886
 
-# Anthropic
+# Anthropic Claude
 ANTHROPIC_API_KEY=your_api_key
 
 # Server
 PORT=3000
+NODE_ENV=development
+
+# Admin credentials
+ADMIN_EMAIL=admin@example.com
+ADMIN_PASSWORD=admin123
 ```
 
-### 3. Démarrer l'application
+### 4. Lancer l'application
 
-**Terminal 1 - Backend :**
 ```bash
+# Terminal 1 - Backend
 cd backend
 npm run dev
-```
-Le serveur démarre sur `http://localhost:3000`
 
-**Terminal 2 - Dashboard Conciergerie :**
-```bash
+# Terminal 2 - Frontend Conciergerie
 cd frontend
 npm run dev
-```
-Le dashboard conciergerie s'ouvre sur `http://localhost:5173`
 
-**Terminal 3 - Dashboard Admin :**
-```bash
+# Terminal 3 - Frontend Admin
 cd frontend-admin
 npm run dev
 ```
-Le dashboard admin s'ouvre sur `http://localhost:5174`
 
-## Configuration Twilio Webhook
+L'application sera accessible sur :
+- **Backend** : http://localhost:3000
+- **Frontend Conciergerie** : http://localhost:5173
+- **Frontend Admin** : http://localhost:5174
 
-Pour recevoir des messages WhatsApp, il faut configurer le webhook Twilio :
+## 🌐 Déploiement sur Render
 
-### Option 1 : Utiliser ngrok (développement local)
+### Backend
 
-1. Installer ngrok : https://ngrok.com/download
+1. Créer un nouveau **Web Service** sur Render
+2. Connecter le repository GitHub
+3. Configuration :
+   - **Root Directory** : `backend`
+   - **Build Command** : `npm install && npm run build`
+   - **Start Command** : `node dist/server.js`
+   - **Environment** : Node
+4. Ajouter les variables d'environnement (voir section Configuration)
 
-2. Démarrer ngrok :
+### Frontend Conciergerie
+
+1. Créer un nouveau **Static Site** sur Render
+2. Connecter le repository GitHub
+3. Configuration :
+   - **Root Directory** : `frontend`
+   - **Build Command** : `npm install && npm run build`
+   - **Publish Directory** : `dist`
+4. Ajouter la variable d'environnement :
+   - `VITE_API_URL` : URL de votre backend Render (ex: `https://conciergerie-backend.onrender.com`)
+
+### Frontend Admin
+
+1. Créer un nouveau **Static Site** sur Render
+2. Connecter le repository GitHub
+3. Configuration :
+   - **Root Directory** : `frontend-admin`
+   - **Build Command** : `npm install && npm run build`
+   - **Publish Directory** : `dist`
+4. Ajouter la variable d'environnement :
+   - `VITE_API_URL` : URL de votre backend Render
+
+### Configuration Twilio
+
+1. Dans la console Twilio, configurer le webhook :
+   - **URL** : `https://votre-backend.onrender.com/webhook/whatsapp`
+   - **Method** : `HTTP POST`
+2. Dans l'interface admin, configurer les credentials Twilio pour chaque conciergerie
+
+Voir `CONFIGURER_TWILIO.md` pour plus de détails.
+
+## 🔐 Identifiants par défaut
+
+Après le premier déploiement, initialisez les données de test :
+
 ```bash
-ngrok http 3000
+curl -X POST https://votre-backend.onrender.com/api/setup/seed
 ```
 
-3. Copier l'URL HTTPS fournie (exemple : `https://abc123.ngrok.io`)
+Cela créera :
+- **Admin** : `admin@example.com` / `admin123`
+- **Conciergerie 1** : `parc@conciergerie.fr` / `parc123`
+- **Conciergerie 2** : `jardins@conciergerie.fr` / `jardins123`
 
-4. Configurer le webhook Twilio :
-   - Aller sur https://console.twilio.com/us1/develop/sms/whatsapp/sandbox
-   - Dans "WHEN A MESSAGE COMES IN", coller : `https://abc123.ngrok.io/webhook/whatsapp`
-   - Sauvegarder
+Voir `INITIALISER_DONNEES.md` pour plus de détails.
 
-### Option 2 : Déployer en production
+## 📚 API Endpoints
 
-Déployer sur Railway, Render, ou autre plateforme, puis utiliser l'URL publique.
+### Authentification
 
-## Tester l'application
-
-### 1. Envoyer un message test
-
-1. Sur Twilio Console : https://console.twilio.com/us1/develop/sms/whatsapp/sandbox
-2. Envoyer le code d'activation au numéro Twilio depuis WhatsApp (exemple : `join <code>`)
-3. Une fois connecté, envoyer un message comme : "Bonjour, je voudrais réserver une table pour ce soir"
-
-### 2. Se connecter au Dashboard Conciergerie
-
-1. Ouvrir le dashboard conciergerie : http://localhost:5173
-2. Se connecter avec les identifiants par défaut :
-   - Email : `demo@example.com`
-   - Mot de passe : `demo123`
-3. La conversation apparaît dans la liste de gauche
-4. Le message du client s'affiche
-5. L'IA répond automatiquement au client (en utilisant les FAQs si pertinent)
-6. Vous pouvez intervenir manuellement en tapant un message et en cliquant "Envoyer"
-
-### 2.5. Configurer les FAQs (optionnel)
-
-1. Dans le dashboard conciergerie, cliquer sur l'onglet "FAQ"
-2. Cliquer sur "+ Ajouter une FAQ"
-3. Remplir la question et la réponse
-4. Cliquer sur "Ajouter"
-5. L'IA utilisera automatiquement ces FAQs pour répondre aux clients
-
-### 3. Gérer les demandes de fonctionnalités
-
-1. Ouvrir le dashboard admin : http://localhost:5174
-2. Cliquer sur "+ Nouvelle demande"
-3. Remplir le titre, la description et la priorité
-4. Cliquer sur "Soumettre"
-5. La demande apparaît dans la liste avec son statut
-6. Vous pouvez changer le statut ou supprimer la demande
-
-## Structure du Projet
-
-```
-/
-├── .env                          # Credentials (Twilio, Anthropic)
-├── .gitignore                    # Fichiers à ignorer (dont .env)
-├── concierge.db                  # Base de données SQLite
-├── README.md                     # Ce fichier
-├── backend/
-│   ├── src/
-│   │   ├── server.ts            # Serveur Express principal
-│   │   ├── database.ts          # Gestion SQLite
-│   │   ├── claude.ts            # Intégration Claude AI
-│   │   └── twilio.ts            # Envoi messages WhatsApp
-│   ├── package.json
-│   └── tsconfig.json
-├── frontend/                     # Dashboard Conciergerie (port 5173)
-│   ├── src/
-│   │   ├── App.tsx              # Application principale avec login
-│   │   ├── components/
-│   │   │   ├── ConversationList.tsx  # Liste conversations
-│   │   │   ├── ChatWindow.tsx        # Fenêtre de chat
-│   │   │   ├── FAQ.tsx               # Gestion des FAQs
-│   │   │   └── Login.tsx             # Page de connexion
-│   │   └── types.ts             # Types TypeScript
-│   ├── package.json
-│   └── vite.config.ts
-└── frontend-admin/               # Dashboard Admin (port 5174)
-    ├── src/
-    │   ├── App.tsx              # Application admin
-    │   ├── components/
-    │   │   └── FeatureRequests.tsx   # Gestion feature requests
-    │   └── types.ts             # Types TypeScript
-    ├── package.json
-    └── vite.config.ts
-```
-
-## API Endpoints
-
-### Backend (http://localhost:3000)
-
-**Authentification :**
-- `POST /api/admin/conciergeries` - Créer une conciergerie (admin)
-- `POST /api/auth/login` - Se connecter
-- `POST /api/auth/logout` - Se déconnecter
+- `POST /api/auth/login` - Connexion conciergerie
+- `POST /api/auth/logout` - Déconnexion conciergerie
 - `GET /api/auth/me` - Vérifier la session
+- `POST /api/admin/auth/login` - Connexion admin
+- `POST /api/admin/auth/logout` - Déconnexion admin
 
-**Conversations :** (requiert authentification)
-- `POST /webhook/whatsapp` - Webhook Twilio (reçoit messages)
-- `GET /api/conversations` - Liste les conversations de la conciergerie connectée
+### Conversations
+
+- `GET /api/conversations` - Liste des conversations
 - `GET /api/conversations/:id/messages` - Messages d'une conversation
 - `POST /api/conversations/:id/send` - Envoyer un message
+- `PATCH /api/conversations/:id/auto-reply` - Modifier le mode IA/Humain
 
-**FAQs :** (requiert authentification)
-- `GET /api/faqs` - Liste les FAQs de la conciergerie connectée
+### FAQs
+
+- `GET /api/faqs` - Liste des FAQs
 - `POST /api/faqs` - Créer une FAQ
 - `PATCH /api/faqs/:id` - Modifier une FAQ
 - `DELETE /api/faqs/:id` - Supprimer une FAQ
 
-**Feature Requests :**
-- `GET /api/feature-requests` - Liste toutes les demandes
-- `POST /api/feature-requests` - Créer une demande
-- `PATCH /api/feature-requests/:id` - Modifier le statut d'une demande
-- `DELETE /api/feature-requests/:id` - Supprimer une demande
+### Statistiques
 
-## Base de Données
+- `GET /api/statistics` - Statistiques de la conciergerie
 
-### Table `conciergeries`
-- `id` : ID auto-incrémenté
-- `name` : Nom de la conciergerie
-- `email` : Email de connexion (unique)
-- `password_hash` : Hash SHA-256 du mot de passe
-- `created_at` : Date de création
+### Recherche
 
-### Table `conversations`
-- `id` : ID auto-incrémenté
-- `conciergerie_id` : ID de la conciergerie (FK)
-- `phone_number` : Numéro WhatsApp client
-- `created_at` : Date création
-- `last_message_at` : Dernière activité
+- `GET /api/search?q=query` - Rechercher dans les conversations
 
-### Table `messages`
-- `id` : ID auto-incrémenté
-- `conversation_id` : Référence conversation
-- `sender` : 'client' ou 'concierge'
-- `message` : Contenu du message
-- `ai_suggestion` : Suggestion Claude (si message client)
-- `created_at` : Date du message
+### Webhook Twilio
 
-### Table `faqs`
-- `id` : ID auto-incrémenté
-- `conciergerie_id` : ID de la conciergerie (FK)
-- `question` : Question
-- `answer` : Réponse
-- `created_at` : Date de création
-- `updated_at` : Date de modification
+- `POST /webhook/whatsapp` - Recevoir les messages WhatsApp
 
-### Table `feature_requests`
-- `id` : ID auto-incrémenté
-- `conciergerie_id` : ID de la conciergerie créatrice (FK)
-- `title` : Titre de la demande
-- `description` : Description détaillée
-- `status` : 'pending' | 'in_progress' | 'completed' | 'rejected'
-- `priority` : 'low' | 'medium' | 'high'
-- `created_at` : Date de création
-- `updated_at` : Date de modification
+## 🗄️ Base de données
 
-## Coûts estimés
+SQLite avec les tables suivantes :
+- `conciergeries` - Informations des conciergeries
+- `conversations` - Conversations avec les clients
+- `messages` - Messages des conversations
+- `faqs` - FAQs par conciergerie
+- `phone_routing` - Routage des numéros de téléphone
+- `response_templates` - Templates de réponses rapides
+- `conversation_tags` - Tags pour les conversations
+- `conversation_notes` - Notes internes sur les conversations
 
-### Twilio
-- Sandbox : **Gratuit** (pour tests)
-- Production : ~0.005$ par message
+## 🛠️ Technologies utilisées
 
-### Claude 3.5 Haiku
-- ~0.25$ par million de tokens (~$0.0005 par message de 200 tokens)
-- Pour 1000 messages/mois : ~0.50$
-- $5 de crédit gratuit pour les nouveaux comptes
+- **Backend** : Node.js, Express, TypeScript, SQLite (sql.js)
+- **Frontend** : React, TypeScript, Vite
+- **IA** : Anthropic Claude 3.5 Haiku
+- **WhatsApp** : Twilio WhatsApp API
 
-**Total mensuel pour 1000 messages : ~5.50$**
+## 📖 Documentation supplémentaire
 
-## Dépannage
+- `CONFIGURER_TWILIO.md` - Guide de configuration Twilio
+- `DIAGNOSTIC_WHATSAPP.md` - Guide de diagnostic pour les problèmes WhatsApp
+- `INITIALISER_DONNEES.md` - Guide pour initialiser les données de test
 
-### Le webhook ne reçoit pas de messages
-- Vérifier que ngrok est actif
-- Vérifier l'URL webhook sur Twilio Console
-- Regarder les logs backend : `cd backend && npm run dev`
+## 📝 Licence
 
-### Erreur Claude
-- Vérifier la clé API dans `.env` (ANTHROPIC_API_KEY)
-- Vérifier le crédit Anthropic : https://console.anthropic.com/
-
-### Messages non envoyés
-- Vérifier les credentials Twilio dans `.env`
-- Regarder les logs Twilio : https://console.twilio.com/monitor/logs/errors
-
-## Différences entre les dashboards
-
-### Dashboard Conciergerie (http://localhost:5173)
-- Pour les opérateurs de conciergerie
-- **Authentification requise** : Chaque conciergerie a son propre compte
-- Gestion des conversations WhatsApp avec les clients
-- **Gestion des FAQs** : Configurer des questions/réponses pour l'IA
-- Visualisation des messages et interventions manuelles
-- L'IA répond automatiquement aux clients en utilisant les FAQs configurées
-
-### Dashboard Admin (http://localhost:5174)
-- Pour les administrateurs système
-- Gestion des demandes de fonctionnalités (feature requests)
-- Statistiques sur les demandes (total, en attente, en cours, terminées)
-- Création, modification et suppression de demandes
-- Attribution de priorités et suivi de statut
-
-## Prochaines étapes
-
-Pour améliorer l'application :
-1. Ajouter WebSockets pour mises à jour en temps réel
-2. Ajouter authentification pour les dashboards
-3. Ajouter un système de templates de réponses
-4. Déployer en production (Railway, Render, AWS)
-5. Ajouter des analytics (nombre de messages, temps de réponse)
-
-## Support
-
-## Déploiement en Production
-
-Pour déployer l'application en production, consultez les guides :
-
-- **[DEPLOY_SIMPLE.md](./DEPLOY_SIMPLE.md)** - Comparaison des méthodes simples ⭐
-- **[DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md)** - Guide Railway (le plus simple)
-- **[DEPLOY_AWS.md](./DEPLOY_AWS.md)** - Guide AWS (Amplify, App Runner, etc.)
-- **[DEPLOY_FLYIO.md](./DEPLOY_FLYIO.md)** - Guide Fly.io avec Dockerfiles
-- **[DEPLOYMENT_DIGITALOCEAN.md](./DEPLOYMENT_DIGITALOCEAN.md)** - Guide DigitalOcean
-- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Guide général (VPS, PM2, etc.)
-
-### Options de déploiement disponibles :
-- **Railway** (le plus simple, ~$5-20/mois) ⭐ Recommandé
-- **AWS Amplify** (gratuit pour commencer, très simple) ⭐ Recommandé
-- **AWS App Runner** (simple, ~$7-25/mois)
-- **Render** (très simple, ~$7-25/mois)
-- **Fly.io** (avec Dockerfiles, ~$5-15/mois)
-- **DigitalOcean App Platform** (~$12-25/mois)
-- **DigitalOcean Droplet + CapRover** (~$6-12/mois)
-- **VPS classique** avec PM2
-
-## Support
-
-Pour toute question, vérifier :
-- Documentation Twilio : https://www.twilio.com/docs/whatsapp
-- Documentation Anthropic Claude : https://docs.anthropic.com/
+MIT
