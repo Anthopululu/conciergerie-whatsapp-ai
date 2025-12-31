@@ -637,10 +637,12 @@ app.get('/api/conversations', requireAuth, (req: Request, res: Response) => {
 });
 
 // API: Get messages for a conversation
-app.get('/api/conversations/:id/messages', requireAuth, (req: Request, res: Response) => {
+app.get('/api/conversations/:id/messages', requireAuth, async (req: Request, res: Response) => {
   try {
     const conversationId = parseInt(req.params.id);
-    const messages = dbQueries.getMessages(conversationId);
+    const messages = USE_POSTGRES
+      ? await dbQueries.getMessagesAsync(conversationId)
+      : dbQueries.getMessages(conversationId);
     res.json(messages);
   } catch (error) {
     console.error('Error fetching messages:', error);
