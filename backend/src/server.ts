@@ -502,18 +502,6 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
         const conversationData = USE_POSTGRES
           ? await dbQueries.getConversationByIdAsync(conversation.id)
           : dbQueries.getConversationById(conversation.id);
-        console.log(`🔍 Checking auto-reply for conversation ${conversation.id}:`, {
-          conversationFromGetOrCreate: {
-            id: conversation.id,
-            ai_auto_reply: conversation.ai_auto_reply
-          },
-          conversationDataFromGetById: conversationData ? {
-            id: conversationData.id,
-            ai_auto_reply: conversationData.ai_auto_reply,
-            phone_number: conversationData.phone_number
-          } : null
-        });
-        
         if (!conversationData) {
           console.log(`❌ Conversation ${conversation.id} not found. Skipping automatic response.`);
           return;
@@ -521,15 +509,16 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
         
         // FIX: Force ai_auto_reply to be a number (0 or 1)
         // Handle case where PostgreSQL returns it as a date string
-        let aiAutoReplyValue: number;
         const rawValue = conversationData.ai_auto_reply ?? conversation.ai_auto_reply;
+        console.log(`🔍 RAW ai_auto_reply from DB: ${rawValue} (type: ${typeof rawValue})`);
         
+        let aiAutoReplyValue: number;
         if (typeof rawValue === 'number') {
           aiAutoReplyValue = rawValue === 0 ? 0 : 1;
         } else if (typeof rawValue === 'string') {
           // If it's a string that looks like a date, default to 1
           if (rawValue.includes('-') && rawValue.includes(':')) {
-            console.log(`⚠️  ai_auto_reply is a date string (${rawValue}), defaulting to 1`);
+            console.log(`⚠️  DETECTED DATE STRING! Converting "${rawValue}" to 1`);
             aiAutoReplyValue = 1;
           } else {
             // Try to parse as number
@@ -538,17 +527,19 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
           }
         } else {
           // null, undefined, or other - default to 1
+          console.log(`⚠️  ai_auto_reply is null/undefined, defaulting to 1`);
           aiAutoReplyValue = 1;
         }
         
-        console.log(`🔍 ai_auto_reply: raw=${rawValue}, converted=${aiAutoReplyValue} (type: ${typeof aiAutoReplyValue})`);
+        console.log(`✅ CONVERTED ai_auto_reply: ${aiAutoReplyValue} (type: ${typeof aiAutoReplyValue})`);
         
+        // CRITICAL: Use the converted value for the check
         if (aiAutoReplyValue === 0) {
-          console.log(`⏸️  AI auto-reply is disabled (ai_auto_reply=${aiAutoReplyValue}) for conversation ${conversation.id}. Skipping automatic response.`);
+          console.log(`⏸️  AI auto-reply is DISABLED (ai_auto_reply=${aiAutoReplyValue}) for conversation ${conversation.id}. Skipping automatic response.`);
           return;
         }
         
-        console.log(`✅ AI auto-reply is enabled (ai_auto_reply=${aiAutoReplyValue}) for conversation ${conversation.id}. Proceeding with AI response.`);
+        console.log(`✅ AI auto-reply is ENABLED (ai_auto_reply=${aiAutoReplyValue}) for conversation ${conversation.id}. Proceeding with AI response.`);
 
         console.log(`🔄 Starting AI response generation for conversation ${conversation.id}...`);
         console.log(`📝 Client message: "${Body}"`);
