@@ -1437,6 +1437,8 @@ app.listen(PORT, () => {
       const conciergeries = dbQueries.getAllConciergeries();
       if (conciergeries.length === 0) {
         console.log('⚠️  No conciergeries found. Initializing with seed data...');
+        console.log('📝 Note: On Render, the database is ephemeral and resets on each deploy.');
+        console.log('📝 Data will be auto-initialized on each startup.');
         try {
           const seedModule = await import('./seed-data');
           const seed = seedModule.default || seedModule;
@@ -1446,6 +1448,7 @@ app.listen(PORT, () => {
           console.log('   - Résidence Le Parc: parc@conciergerie.fr / parc123');
           console.log('   - Domaine des Jardins: jardins@conciergerie.fr / jardins123');
           console.log('📚 Created 6 FAQs (3 per conciergerie)');
+          console.log('💡 You can also manually reinitialize with: POST /api/setup/seed');
         } catch (error: any) {
           console.error('❌ Error initializing seed data:', error.message);
           // Fallback: create simple conciergeries
@@ -1453,6 +1456,7 @@ app.listen(PORT, () => {
           console.log('✅ Default conciergerie created: demo@example.com / demo123');
         }
       } else {
+        console.log(`✅ Database has ${conciergeries.length} conciergerie(s) - no initialization needed`);
         console.log(`ℹ️  ${conciergeries.length} conciergerie(s) already exist`);
 
         // Initialize Twilio clients for conciergeries with WhatsApp configured
