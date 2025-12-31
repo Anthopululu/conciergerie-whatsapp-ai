@@ -719,7 +719,9 @@ app.post('/api/conversations/:id/send', requireAuth, async (req: Request, res: R
     await sendWhatsAppMessage(conversation.phone_number, message, conciergerieId, conciergerie.whatsapp_number);
 
     // Save message in database (manual message, not AI)
-    const savedMessage = dbQueries.addMessage(conversationId, 'concierge', message, null, 0);
+    const savedMessage = USE_POSTGRES
+      ? await dbQueries.addMessageAsync(conversationId, message, 'concierge', undefined, undefined, 0)
+      : dbQueries.addMessage(conversationId, message, 'concierge', undefined, undefined, 0);
 
     res.json({ success: true, message: savedMessage });
   } catch (error) {
@@ -1038,10 +1040,12 @@ app.get('/api/admin/conversations', requireAdminAuth, (_req: Request, res: Respo
 });
 
 // API: Get messages for a conversation (admin)
-app.get('/api/admin/conversations/:id/messages', requireAdminAuth, (req: Request, res: Response) => {
+app.get('/api/admin/conversations/:id/messages', requireAdminAuth, async (req: Request, res: Response) => {
   try {
     const conversationId = parseInt(req.params.id);
-    const messages = dbQueries.getMessages(conversationId);
+    const messages = USE_POSTGRES
+      ? await dbQueries.getMessagesAsync(conversationId)
+      : dbQueries.getMessages(conversationId);
     res.json(messages);
   } catch (error) {
     console.error('Error fetching messages:', error);
