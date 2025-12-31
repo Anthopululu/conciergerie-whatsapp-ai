@@ -109,7 +109,7 @@ function App() {
     try {
       const response = await axios.get('/api/conversations');
       const fetchedConversations = response.data;
-      setConversations(fetchedConversations);
+      setDisplayedConversations(fetchedConversations);
       
       // Update conversationAutoReply state with current values from DB
       // Only update if not already set (preserve user's manual changes)
