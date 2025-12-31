@@ -489,10 +489,12 @@ export const dbQueries = {
 
   // Add message
   addMessage(conversationId: number, sender: 'client' | 'concierge', message: string, aiSuggestion: string | null = null, isAi: number = 0): Message {
+    console.log(`💾 addMessage called with isAi=${isAi} for sender=${sender}`);
     db.run(
       'INSERT INTO messages (conversation_id, sender, message, ai_suggestion, is_ai, created_at) VALUES (?, ?, ?, ?, ?, datetime("now"))',
       [conversationId, sender, message, aiSuggestion, isAi]
     );
+    console.log(`✅ Message inserted with isAi=${isAi}`);
 
     // Update last_message_at
     db.run('UPDATE conversations SET last_message_at = datetime("now") WHERE id = ?', [conversationId]);
@@ -513,6 +515,9 @@ export const dbQueries = {
     
     // Column order in DB (after migration): id, conversation_id, sender, message, ai_suggestion, created_at, is_ai
     // So: row[0]=id, row[1]=conversation_id, row[2]=sender, row[3]=message, row[4]=ai_suggestion, row[5]=created_at, row[6]=is_ai
+    
+    const dbIsAi = row[6] !== null && row[6] !== undefined ? (row[6] as number) : isAi;
+    console.log(`🔍 Retrieved message: is_ai from DB=${row[6]}, using=${dbIsAi}, original isAi param=${isAi}`);
 
     return {
       id: row[0] as number,
@@ -520,7 +525,7 @@ export const dbQueries = {
       sender: row[2] as 'client' | 'concierge',
       message: row[3] as string,
       ai_suggestion: row[4] as string | null,
-      is_ai: row[6] !== null && row[6] !== undefined ? (row[6] as number) : 0,  // is_ai is at index 6
+      is_ai: dbIsAi,  // Use isAi parameter if DB value is null/undefined
       created_at: row[5] as string,   // created_at is at index 5
     };
   },
