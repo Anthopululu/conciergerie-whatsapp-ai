@@ -102,7 +102,7 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
         <div style={{ position: 'relative' }}>
           <input
             type="text"
-            placeholder="🔍 Rechercher dans les conversations..."
+            placeholder="Rechercher une conversation..."
             value={searchQuery}
             onChange={(e) => handleSearch(e.target.value)}
             className="search-input"

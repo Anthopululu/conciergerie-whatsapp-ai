@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Conversation } from '../types';
 import './ConversationList.css';
 
@@ -5,9 +6,34 @@ interface Props {
   conversations: Conversation[];
   selectedConversation: Conversation | null;
   onSelectConversation: (conversation: Conversation) => void;
+  onSearchResults?: (conversations: Conversation[]) => void;
 }
 
-function ConversationList({ conversations, selectedConversation, onSelectConversation }: Props) {
+function ConversationList({ conversations, selectedConversation, onSelectConversation, onSearchResults }: Props) {
+  const [searchQuery, setSearchQuery] = useState('');
+  
+  const handleSearch = (query: string) => {
+    setSearchQuery(query);
+    if (!onSearchResults) return;
+    
+    if (query.trim().length === 0) {
+      onSearchResults(conversations);
+      return;
+    }
+    
+    const filtered = conversations.filter(conv => {
+      const phone = conv.phone_number.toLowerCase();
+      const lastMessage = (conv.last_message || '').toLowerCase();
+      const conciergerieName = (conv.conciergerie_name || '').toLowerCase();
+      const searchLower = query.toLowerCase();
+      
+      return phone.includes(searchLower) || 
+             lastMessage.includes(searchLower) || 
+             conciergerieName.includes(searchLower);
+    });
+    
+    onSearchResults(filtered);
+  };
   const formatTime = (dateString: string) => {
     // SQLite stores dates as "YYYY-MM-DD HH:MM:SS" without timezone
     // Parse it as local time by treating it as a local datetime string
@@ -66,16 +92,40 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
     return emojis[index];
   };
 
+  const displayedConversations = searchQuery.trim().length === 0 
+    ? conversations 
+    : conversations.filter(conv => {
+        const phone = conv.phone_number.toLowerCase();
+        const lastMessage = (conv.last_message || '').toLowerCase();
+        const conciergerieName = (conv.conciergerie_name || '').toLowerCase();
+        const searchLower = searchQuery.toLowerCase();
+        
+        return phone.includes(searchLower) || 
+               lastMessage.includes(searchLower) || 
+               conciergerieName.includes(searchLower);
+      });
+
   return (
     <div className="conversation-list">
-      {conversations.length === 0 ? (
+      <div className="search-bar">
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            placeholder="Rechercher une conversation..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="search-input"
+          />
+        </div>
+      </div>
+      {displayedConversations.length === 0 ? (
         <div className="no-conversations">
           <div className="no-conversations-icon">💬</div>
           <p>Aucune conversation</p>
           <p className="hint">Les messages WhatsApp apparaîtront ici</p>
         </div>
       ) : (
-        conversations.map((conversation) => (
+        displayedConversations.map((conversation) => (
           <div
             key={conversation.id}
             className={`conversation-item ${selectedConversation?.id === conversation.id ? 'active' : ''}`}
