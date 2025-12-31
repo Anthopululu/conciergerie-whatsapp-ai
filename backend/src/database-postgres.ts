@@ -459,7 +459,7 @@ export const dbQueries = {
        FROM conciergeries ORDER BY created_at DESC`
     );
     
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
       name: row.name,
       email: row.email,
@@ -819,7 +819,7 @@ export const dbQueries = {
       [conversationId]
     );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
       conversation_id: row.conversation_id,
       sender: row.sender,
@@ -898,7 +898,7 @@ export const dbQueries = {
       [conciergerieId]
     );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
       conciergerie_id: row.conciergerie_id,
       question: row.question,
@@ -978,7 +978,7 @@ export const dbQueries = {
        ORDER BY pr.created_at DESC`
     );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
       phone_number: row.phone_number,
       conciergerie_id: row.conciergerie_id,
@@ -1028,7 +1028,7 @@ export const dbQueries = {
        ORDER BY created_at DESC`
     );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
       conciergerie_id: row.conciergerie_id,
       title: row.title,
@@ -1094,7 +1094,7 @@ export const dbQueries = {
       [conciergerieId]
     );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
       conciergerie_id: row.conciergerie_id,
       name: row.name,
@@ -1139,7 +1139,7 @@ export const dbQueries = {
       [conversationId]
     );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
       conversation_id: row.conversation_id,
       tag: row.tag,
@@ -1175,7 +1175,7 @@ export const dbQueries = {
       [conversationId]
     );
 
-    return result.rows.map(row => ({
+    return result.rows.map((row: any) => ({
       id: row.id,
       conversation_id: row.conversation_id,
       note: row.note,

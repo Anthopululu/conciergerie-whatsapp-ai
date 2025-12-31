@@ -15,12 +15,12 @@ export async function generateAISuggestion(conversationId: number, clientMessage
     
     // Get conversation history for context
     const history = USE_POSTGRES
-      ? (await dbQueries.getConversationHistoryAsync(conversationId, 10)).reverse()
+      ? (await (dbQueries as any).getConversationHistoryAsync(conversationId, 10)).reverse()
       : dbQueries.getConversationHistory(conversationId, 10).reverse();
 
     // Get conversation to find conciergerie_id
     const conversation = USE_POSTGRES
-      ? await dbQueries.getConversationByIdAsync(conversationId)
+      ? await (dbQueries as any).getConversationByIdAsync(conversationId)
       : dbQueries.getConversationById(conversationId);
 
     // Get FAQs for this conciergerie
