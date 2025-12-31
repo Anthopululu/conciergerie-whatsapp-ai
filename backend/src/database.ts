@@ -520,7 +520,7 @@ export const dbQueries = {
       sender: row[2] as 'client' | 'concierge',
       message: row[3] as string,
       ai_suggestion: row[4] as string | null,
-      is_ai: (row[6] as number) || 0,  // is_ai is at index 6
+      is_ai: row[6] !== null && row[6] !== undefined ? (row[6] as number) : 0,  // is_ai is at index 6
       created_at: row[5] as string,   // created_at is at index 5
     };
   },
