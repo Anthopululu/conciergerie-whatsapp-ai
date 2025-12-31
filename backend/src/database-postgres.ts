@@ -638,15 +638,7 @@ export const dbQueries = {
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         COALESCE(
-           CASE 
-             WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN c.ai_auto_reply
-             WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN c.ai_auto_reply::integer
-             WHEN pg_typeof(c.ai_auto_reply)::text = 'smallint' THEN c.ai_auto_reply::integer
-             ELSE NULL
-           END,
-           1
-         )::INTEGER as ai_auto_reply,
+         CAST(COALESCE(c.ai_auto_reply, 1) AS INTEGER) as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
@@ -660,10 +652,18 @@ export const dbQueries = {
 
     const row = result.rows[0];
     // FIX: Force ai_auto_reply to be an integer (0 or 1)
-    // PostgreSQL might return it as a different type, so we ensure it's a number
-    const aiAutoReply = typeof row.ai_auto_reply === 'number' 
-      ? (row.ai_auto_reply === 0 ? 0 : 1)  // Ensure it's 0 or 1
-      : 1; // Default to 1 if not a number
+    // The SQL query should already return an INTEGER, but we ensure it's a number
+    let aiAutoReply: number;
+    if (typeof row.ai_auto_reply === 'number') {
+      aiAutoReply = row.ai_auto_reply === 0 ? 0 : 1;
+    } else if (typeof row.ai_auto_reply === 'string') {
+      // If somehow it's still a string (shouldn't happen with CAST), parse it
+      const parsed = parseInt(row.ai_auto_reply, 10);
+      aiAutoReply = isNaN(parsed) ? 1 : (parsed === 0 ? 0 : 1);
+    } else {
+      aiAutoReply = 1; // Default to 1
+    }
+    console.log(`🔍 getConversationByIdAsync: ai_auto_reply=${row.ai_auto_reply} (type: ${typeof row.ai_auto_reply}) -> converted=${aiAutoReply}`);
     return {
       id: row.id,
       conciergerie_id: row.conciergerie_id,
