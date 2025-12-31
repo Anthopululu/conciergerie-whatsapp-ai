@@ -191,7 +191,25 @@ async function createSchema() {
       await client.query(`ALTER TABLE conversations ADD COLUMN ai_auto_reply INTEGER DEFAULT 1`);
       console.log('✅ Added ai_auto_reply column to conversations table');
     } catch (error: any) {
-      // Column already exists, ignore
+      // Column already exists, check if it's the wrong type and fix it
+      try {
+        // Check the actual type of the column
+        const typeCheck = await client.query(`
+          SELECT data_type 
+          FROM information_schema.columns 
+          WHERE table_name = 'conversations' AND column_name = 'ai_auto_reply'
+        `);
+        
+        if (typeCheck.rows.length > 0 && typeCheck.rows[0].data_type !== 'integer') {
+          console.log(`⚠️  ai_auto_reply column exists but is type ${typeCheck.rows[0].data_type}, converting to INTEGER...`);
+          // Drop and recreate the column with correct type
+          await client.query(`ALTER TABLE conversations DROP COLUMN ai_auto_reply`);
+          await client.query(`ALTER TABLE conversations ADD COLUMN ai_auto_reply INTEGER DEFAULT 1`);
+          console.log('✅ Fixed ai_auto_reply column type to INTEGER');
+        }
+      } catch (fixError: any) {
+        console.log('⚠️  Could not check/fix ai_auto_reply column type:', fixError.message);
+      }
     }
 
     await client.query('COMMIT');
@@ -545,6 +563,8 @@ export const dbQueries = {
 
     if (result.rows.length > 0) {
       const row = result.rows[0];
+      // Debug: log all row properties to see what we're getting
+      console.log(`🔍 getOrCreateConversationAsync DEBUG: row keys=${Object.keys(row)}, ai_auto_reply=${row.ai_auto_reply}, type=${typeof row.ai_auto_reply}, created_at=${row.created_at}, last_message_at=${row.last_message_at}`);
       // Ensure ai_auto_reply is an integer (0 or 1), not a date string
       const aiAutoReply = typeof row.ai_auto_reply === 'number' 
         ? row.ai_auto_reply 
@@ -604,6 +624,8 @@ export const dbQueries = {
     if (result.rows.length === 0) return null;
 
     const row = result.rows[0];
+    // Debug: log all row properties to see what we're getting
+    console.log(`🔍 getConversationByIdAsync DEBUG: row keys=${Object.keys(row)}, ai_auto_reply=${row.ai_auto_reply}, type=${typeof row.ai_auto_reply}, created_at=${row.created_at}, last_message_at=${row.last_message_at}`);
     // Ensure ai_auto_reply is an integer (0 or 1), not a date string
     const aiAutoReply = typeof row.ai_auto_reply === 'number' 
       ? row.ai_auto_reply 
