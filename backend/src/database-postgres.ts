@@ -549,10 +549,20 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     // Try to get existing conversation
+    // Use explicit column selection with CAST to ensure ai_auto_reply is INTEGER
     let result = await pool.query(
-      `SELECT c.id, c.conciergerie_id, c.phone_number, 
-              COALESCE(c.ai_auto_reply, 1)::INTEGER as ai_auto_reply,
-              c.created_at, c.last_message_at, co.name as conciergerie_name
+      `SELECT 
+         c.id, 
+         c.conciergerie_id, 
+         c.phone_number, 
+         CASE 
+           WHEN c.ai_auto_reply IS NULL THEN 1
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'timestamp without time zone' THEN 1
+           ELSE CAST(c.ai_auto_reply AS INTEGER)
+         END as ai_auto_reply,
+         c.created_at, 
+         c.last_message_at, 
+         co.name as conciergerie_name
        FROM conversations c
        LEFT JOIN conciergeries co ON c.conciergerie_id = co.id
        WHERE c.phone_number = $1 AND c.conciergerie_id = $2
@@ -612,9 +622,18 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     const result = await pool.query(
-      `SELECT c.id, c.conciergerie_id, c.phone_number, 
-              COALESCE(c.ai_auto_reply, 1)::INTEGER as ai_auto_reply,
-              c.created_at, c.last_message_at, co.name as conciergerie_name
+      `SELECT 
+         c.id, 
+         c.conciergerie_id, 
+         c.phone_number, 
+         CASE 
+           WHEN c.ai_auto_reply IS NULL THEN 1
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'timestamp without time zone' THEN 1
+           ELSE CAST(c.ai_auto_reply AS INTEGER)
+         END as ai_auto_reply,
+         c.created_at, 
+         c.last_message_at, 
+         co.name as conciergerie_name
        FROM conversations c
        LEFT JOIN conciergeries co ON c.conciergerie_id = co.id
        WHERE c.id = $1`,
