@@ -17,6 +17,7 @@ import { sendWhatsAppMessage, initTwilio, twilioClients } from './twilio';
 
 // Check if we're using PostgreSQL
 const USE_POSTGRES = !!process.env.DATABASE_URL;
+console.log(`🔧 DATABASE_URL is ${process.env.DATABASE_URL ? 'SET' : 'NOT SET'} -> USE_POSTGRES = ${USE_POSTGRES}`);
 
 // Initialize services with loaded environment variables
 initClaude();
