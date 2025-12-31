@@ -469,8 +469,7 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
       : dbQueries.getOrCreateConversation(From, conciergerie.id);
     console.log(`📋 Conversation retrieved/created:`, {
       id: conversation.id,
-      phone_number: conversation.phone_number,
-      ai_auto_reply: conversation.ai_auto_reply
+      phone_number: conversation.phone_number
     });
 
     // Ensure phone routing exists for this conversation (so it's visible)
