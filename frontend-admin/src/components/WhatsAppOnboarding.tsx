@@ -499,7 +499,7 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
                       handleSaveConfig(editingConfigId);
                     }
                   }}
-                  disabled={isSubmittingConfig || (!whatsappNumber.trim() && !sandboxNumber.trim()) || !twilioSid.trim() || !twilioToken.trim()}
+                  disabled={isSubmittingConfig || !whatsappNumber.trim() || !twilioSid.trim() || !twilioToken.trim()}
                 >
                   {isSubmittingConfig ? 'Enregistrement...' : 'Enregistrer'}
                 </button>
