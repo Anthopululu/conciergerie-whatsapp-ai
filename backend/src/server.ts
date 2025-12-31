@@ -626,14 +626,6 @@ app.get('/api/conversations/:id/messages', requireAuth, async (req: Request, res
 });
 
 // Auto-reply toggle endpoint removed - AI always responds automatically
-    dbQueries.updateConversationAutoReply(conversationId, ai_auto_reply);
-    console.log(`✅ Updated ai_auto_reply to ${ai_auto_reply} for conversation ${conversationId}`);
-    res.json({ success: true, ai_auto_reply });
-  } catch (error) {
-    console.error('❌ Error updating auto-reply setting:', error);
-    res.status(500).json({ error: 'Failed to update auto-reply setting' });
-  }
-});
 
 // API: Send message from conciergerie
 app.post('/api/conversations/:id/send', requireAuth, async (req: Request, res: Response) => {
