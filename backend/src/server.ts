@@ -487,7 +487,7 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
 
     // Save client message first
     if (USE_POSTGRES) {
-      await dbQueries.addMessageAsync(conversation.id, Body, 'client', undefined, undefined, 0);
+      await (dbQueriesPostgres as any).addMessageAsync(conversation.id, Body, 'client', undefined, undefined, 0);
     } else {
       dbQueries.addMessage(conversation.id, Body, 'client', undefined, undefined, 0);
     }
@@ -617,7 +617,7 @@ app.get('/api/conversations/:id/messages', requireAuth, async (req: Request, res
   try {
     const conversationId = parseInt(req.params.id);
     const messages = USE_POSTGRES
-      ? await dbQueries.getMessagesAsync(conversationId)
+      ? await (dbQueriesPostgres as any).getMessagesAsync(conversationId)
       : dbQueries.getMessages(conversationId);
     res.json(messages);
   } catch (error) {
@@ -660,7 +660,7 @@ app.post('/api/conversations/:id/send', requireAuth, async (req: Request, res: R
 
     // Save message in database (manual message, not AI)
     const savedMessage = USE_POSTGRES
-      ? await dbQueries.addMessageAsync(conversationId, message, 'concierge', undefined, undefined, 0)
+      ? await (dbQueriesPostgres as any).addMessageAsync(conversationId, message, 'concierge', undefined, undefined, 0)
       : dbQueries.addMessage(conversationId, message, 'concierge', undefined, undefined, 0);
 
     res.json({ success: true, message: savedMessage });
@@ -984,7 +984,7 @@ app.get('/api/admin/conversations/:id/messages', requireAdminAuth, async (req: R
   try {
     const conversationId = parseInt(req.params.id);
     const messages = USE_POSTGRES
-      ? await dbQueries.getMessagesAsync(conversationId)
+      ? await (dbQueriesPostgres as any).getMessagesAsync(conversationId)
       : dbQueries.getMessages(conversationId);
     res.json(messages);
   } catch (error) {

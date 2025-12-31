@@ -1,5 +1,5 @@
 import { initDatabase, dbQueries } from './database';
-import { initDatabase as initDatabasePostgres, dbQueries as dbQueriesPostgres } from './database-postgres';
+import { dbQueries as dbQueriesPostgres } from './database-postgres';
 
 const USE_POSTGRES = !!process.env.DATABASE_URL;
 
@@ -8,7 +8,10 @@ async function seed() {
   console.log(`📊 Using ${USE_POSTGRES ? 'PostgreSQL' : 'SQLite'} database`);
 
   // Initialize database
-  await initDatabaseToUse();
+  await initDatabase();
+  
+  // Select the right dbQueries based on database type
+  const dbQueriesToUse = USE_POSTGRES ? dbQueriesPostgres : dbQueries;
 
   // Twilio configuration (default for all conciergeries)
   // Use environment variables only - no hardcoded secrets
