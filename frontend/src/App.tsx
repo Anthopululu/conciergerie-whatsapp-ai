@@ -98,7 +98,7 @@ function App() {
       setupAxiosInterceptor(null);
       setIsAuthenticated(false);
       setConciergerie(null);
-      setConversations([]);
+      setDisplayedConversations([]);
       setSelectedConversation(null);
       setMessages([]);
     }
