@@ -481,7 +481,11 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
     }
 
     // Save client message first
-    dbQueries.addMessage(conversation.id, 'client', Body, null);
+    if (USE_POSTGRES) {
+      await dbQueries.addMessageAsync(conversation.id, Body, 'client', undefined, undefined, 0);
+    } else {
+      dbQueries.addMessage(conversation.id, Body, 'client', undefined, undefined, 0);
+    }
 
     // Respond to Twilio immediately (required to acknowledge receipt)
     res.type('text/xml');
@@ -536,8 +540,12 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
 
         // Always save the AI response in database first
         console.log(`💾 Saving AI response to database...`);
-        dbQueries.addMessage(conversation.id, 'concierge', aiResponse, null, 1);
-        console.log(`✅ AI response saved to database`);
+        if (USE_POSTGRES) {
+          await dbQueries.addMessageAsync(conversation.id, aiResponse, 'concierge', undefined, undefined, 1);
+        } else {
+          dbQueries.addMessage(conversation.id, aiResponse, 'concierge', undefined, undefined, 1);
+        }
+        console.log(`✅ AI response saved to database with is_ai=1`);
 
         // Send AI response automatically via WhatsApp using conciergerie's Twilio config
         // Only send if WhatsApp number is configured
@@ -1088,7 +1096,11 @@ app.post('/api/admin/conversations/:id/send', requireAdminAuth, async (req: Requ
     }
 
     // Add message to database (manual message, not AI)
-    dbQueries.addMessage(conversationId, 'concierge', message, null, 0);
+    if (USE_POSTGRES) {
+      await dbQueries.addMessageAsync(conversationId, message, 'concierge', undefined, undefined, 0);
+    } else {
+      dbQueries.addMessage(conversationId, message, 'concierge', undefined, undefined, 0);
+    }
 
     // Send via Twilio
     const conciergerie = dbQueries.getConciergerieById(conversation.conciergerie_id);
