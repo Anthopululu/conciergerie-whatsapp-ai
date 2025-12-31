@@ -532,7 +532,8 @@ export const dbQueries = {
     
     // Try to get existing conversation
     let result = await pool.query(
-      `SELECT c.id, c.conciergerie_id, c.phone_number, c.ai_auto_reply, 
+      `SELECT c.id, c.conciergerie_id, c.phone_number, 
+              COALESCE(c.ai_auto_reply, 1)::INTEGER as ai_auto_reply,
               c.created_at, c.last_message_at, co.name as conciergerie_name
        FROM conversations c
        LEFT JOIN conciergeries co ON c.conciergerie_id = co.id
@@ -591,7 +592,8 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     const result = await pool.query(
-      `SELECT c.id, c.conciergerie_id, c.phone_number, c.ai_auto_reply, 
+      `SELECT c.id, c.conciergerie_id, c.phone_number, 
+              COALESCE(c.ai_auto_reply, 1)::INTEGER as ai_auto_reply,
               c.created_at, c.last_message_at, co.name as conciergerie_name
        FROM conversations c
        LEFT JOIN conciergeries co ON c.conciergerie_id = co.id
@@ -630,7 +632,8 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     const result = await pool.query(
-      `SELECT c.id, c.conciergerie_id, c.phone_number, c.ai_auto_reply, 
+      `SELECT c.id, c.conciergerie_id, c.phone_number, 
+              COALESCE(c.ai_auto_reply, 1)::INTEGER as ai_auto_reply,
               c.created_at, c.last_message_at, co.name as conciergerie_name
        FROM conversations c
        LEFT JOIN conciergeries co ON c.conciergerie_id = co.id
@@ -668,7 +671,8 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     const result = await pool.query(
-      `SELECT c.id, c.conciergerie_id, c.phone_number, c.ai_auto_reply, 
+      `SELECT c.id, c.conciergerie_id, c.phone_number, 
+              COALESCE(c.ai_auto_reply, 1)::INTEGER as ai_auto_reply,
               c.created_at, c.last_message_at, co.name as conciergerie_name
        FROM conversations c
        LEFT JOIN conciergeries co ON c.conciergerie_id = co.id
