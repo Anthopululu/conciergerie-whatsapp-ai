@@ -560,18 +560,13 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     // Try to get existing conversation
-    // FIX: If ai_auto_reply column is TIMESTAMP, we need to check the actual column type
-    // and use a different approach. For now, always return 1 if it's not a valid integer.
+    // FIX: Use explicit CAST to force INTEGER type
     let result = await pool.query(
       `SELECT 
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         CASE 
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN c.ai_auto_reply
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN c.ai_auto_reply::integer
-           ELSE 1
-         END as ai_auto_reply,
+         CAST(COALESCE(c.ai_auto_reply, 1) AS INTEGER) as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
