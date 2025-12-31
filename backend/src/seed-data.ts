@@ -11,9 +11,10 @@ async function seed() {
   await initDatabase();
 
   // Twilio configuration (default for all conciergeries)
-  const DEFAULT_WHATSAPP_NUMBER = 'whatsapp:+14155238886';
-  const DEFAULT_TWILIO_ACCOUNT_SID = 'TWILIO_ACCOUNT_SID_ENV';
-  const DEFAULT_TWILIO_AUTH_TOKEN = 'TWILIO_AUTH_TOKEN_ENV';
+  // Use environment variables with fallback to default values
+  const DEFAULT_WHATSAPP_NUMBER = process.env.DEFAULT_TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
+  const DEFAULT_TWILIO_ACCOUNT_SID = process.env.DEFAULT_TWILIO_ACCOUNT_SID || 'TWILIO_ACCOUNT_SID_ENV';
+  const DEFAULT_TWILIO_AUTH_TOKEN = process.env.DEFAULT_TWILIO_AUTH_TOKEN || 'TWILIO_AUTH_TOKEN_ENV';
 
   // Create two conciergeries with Twilio config
   console.log('\n📝 Creating conciergeries with Twilio configuration...');
