@@ -22,16 +22,6 @@ const USE_POSTGRES = !!process.env.DATABASE_URL;
 initClaude();
 initTwilio();
 
-// Initialize database (async for PostgreSQL)
-(async () => {
-  try {
-    await initDatabase();
-  } catch (error) {
-    console.error('❌ Failed to initialize database:', error);
-    process.exit(1);
-  }
-})();
-
 const app = express();
 const PORT = process.env.PORT || 3000;
 
@@ -1368,16 +1358,29 @@ app.delete('/api/feature-requests/:id', (req: Request, res: Response) => {
   }
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`🚀 Server running on http://localhost:${PORT}`);
-  console.log(`📱 WhatsApp webhook: http://localhost:${PORT}/webhook/whatsapp`);
-  console.log(`💬 Ready to receive messages!`);
+// Start server - but initialize database first
+(async () => {
+  try {
+    // Initialize database first
+    console.log('🔄 Initializing database...');
+    await initDatabase();
+    console.log('✅ Database initialized successfully');
+  } catch (error) {
+    console.error('❌ Failed to initialize database:', error);
+    process.exit(1);
+  }
 
-  // Wait a bit for database to be ready, then initialize Twilio clients
-  setTimeout(async () => {
-    try {
-      const conciergeries = dbQueries.getAllConciergeries();
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📱 WhatsApp webhook: http://localhost:${PORT}/webhook/whatsapp`);
+    console.log(`💬 Ready to receive messages!`);
+
+    // Wait a bit for database to be ready, then initialize Twilio clients
+    setTimeout(async () => {
+      try {
+        const conciergeries = USE_POSTGRES
+          ? await (dbQueriesPostgres as any).getAllConciegeriesAsync()
+          : dbQueries.getAllConciergeries();
       if (conciergeries.length === 0) {
         console.log('⚠️  No conciergeries found. Initializing with seed data...');
         console.log('📝 Note: On Render, the database is ephemeral and resets on each deploy.');
@@ -1421,8 +1424,13 @@ app.listen(PORT, () => {
         } catch (error: any) {
           console.error('❌ Error initializing seed data:', error.message);
           // Fallback: create simple conciergeries
-          const demo = dbQueries.createConciergerie('Conciergerie Demo', 'demo@example.com', 'demo123');
-          console.log('✅ Default conciergerie created: demo@example.com / demo123');
+          if (USE_POSTGRES) {
+            const demo = await (dbQueriesPostgres as any).createConciergerieAsync('Conciergerie Demo', 'demo@example.com', 'demo123');
+            console.log('✅ Default conciergerie created: demo@example.com / demo123');
+          } else {
+            const demo = dbQueries.createConciergerie('Conciergerie Demo', 'demo@example.com', 'demo123');
+            console.log('✅ Default conciergerie created: demo@example.com / demo123');
+          }
         }
       } else {
         console.log(`✅ Database has ${conciergeries.length} conciergerie(s) - no initialization needed`);
@@ -1431,10 +1439,12 @@ app.listen(PORT, () => {
         // Initialize Twilio clients for conciergeries with WhatsApp configured
         // Use getAllConciegeriesWithSecrets to get twilio_auth_token
         const { initTwilioForConciergerie } = require('./twilio');
-        const conciegeriesWithSecrets = dbQueries.getAllConciegeriesWithSecrets();
+        const conciegeriesWithSecrets = USE_POSTGRES
+          ? await (dbQueriesPostgres as any).getAllConciegeriesWithSecretsAsync()
+          : dbQueries.getAllConciegeriesWithSecrets();
         let initializedCount = 0;
 
-        conciegeriesWithSecrets.forEach(conciergerie => {
+        conciegeriesWithSecrets.forEach((conciergerie: any) => {
           if (conciergerie.whatsapp_number && conciergerie.twilio_account_sid && conciergerie.twilio_auth_token) {
             try {
               console.log(`🔄 Initializing Twilio for ${conciergerie.name} (ID: ${conciergerie.id})...`);
@@ -1469,4 +1479,5 @@ app.listen(PORT, () => {
       console.log('POST /api/admin/conciergeries with { name, email, password }');
     }
   }, 100);
-});
+  });
+})();
