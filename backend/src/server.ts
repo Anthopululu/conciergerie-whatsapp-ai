@@ -519,7 +519,7 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
         if (USE_POSTGRES) {
           await (dbQueriesPostgres as any).addMessageAsync(conversation.id, aiResponse, 'concierge', undefined, undefined, 1);
         } else {
-          dbQueries.addMessage(conversation.id, aiResponse, 'concierge', undefined, undefined, 1);
+          dbQueries.addMessage(conversation.id, 'concierge', aiResponse, undefined, 1);
         }
         console.log(`✅ AI response saved to database with is_ai=1`);
 
@@ -661,7 +661,7 @@ app.post('/api/conversations/:id/send', requireAuth, async (req: Request, res: R
     // Save message in database (manual message, not AI)
     const savedMessage = USE_POSTGRES
       ? await (dbQueriesPostgres as any).addMessageAsync(conversationId, message, 'concierge', undefined, undefined, 0)
-      : dbQueries.addMessage(conversationId, message, 'concierge', undefined, undefined, 0);
+      : dbQueries.addMessage(conversationId, 'concierge', message, undefined, 0);
 
     res.json({ success: true, message: savedMessage });
   } catch (error) {
@@ -1017,7 +1017,7 @@ app.post('/api/admin/conversations/:id/send', requireAdminAuth, async (req: Requ
     if (USE_POSTGRES) {
       await (dbQueriesPostgres as any).addMessageAsync(conversationId, message, 'concierge', undefined, undefined, 0);
     } else {
-      dbQueries.addMessage(conversationId, message, 'concierge', undefined, undefined, 0);
+      dbQueries.addMessage(conversationId, 'concierge', message, undefined, 0);
     }
 
     // Send via Twilio
