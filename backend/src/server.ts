@@ -665,35 +665,7 @@ app.get('/api/conversations/:id/messages', requireAuth, async (req: Request, res
   }
 });
 
-// API: Update conversation auto-reply setting (conciergerie)
-app.patch('/api/conversations/:id/auto-reply', requireAuth, (req: Request, res: Response) => {
-  try {
-    const { conciergerieId } = (req as any).session;
-    const conversationId = parseInt(req.params.id);
-    const { ai_auto_reply } = req.body;
-
-    console.log(`🔄 Updating auto-reply for conversation ${conversationId} (conciergerie ${conciergerieId}):`, { ai_auto_reply, type: typeof ai_auto_reply });
-
-    if (typeof ai_auto_reply !== 'number' || (ai_auto_reply !== 0 && ai_auto_reply !== 1)) {
-      console.error(`❌ Invalid ai_auto_reply value: ${ai_auto_reply} (type: ${typeof ai_auto_reply})`);
-      return res.status(400).json({ error: 'ai_auto_reply must be 0 or 1' });
-    }
-
-    // Verify conversation belongs to this conciergerie
-    // Use getConversationById to check if conversation exists and belongs to this conciergerie
-    const conversation = dbQueries.getConversationById(conversationId);
-    
-    if (!conversation) {
-      console.error(`❌ Conversation ${conversationId} not found`);
-      return res.status(404).json({ error: 'Conversation not found' });
-    }
-    
-    if (conversation.conciergerie_id !== conciergerieId) {
-      console.error(`❌ Conversation ${conversationId} does not belong to conciergerie ${conciergerieId} (belongs to ${conversation.conciergerie_id})`);
-      return res.status(403).json({ error: 'Conversation does not belong to this conciergerie' });
-    }
-
-    console.log(`📋 Conversation found:`, { id: conversation.id, current_ai_auto_reply: conversation.ai_auto_reply });
+// Auto-reply toggle endpoint removed - AI always responds automatically
     dbQueries.updateConversationAutoReply(conversationId, ai_auto_reply);
     console.log(`✅ Updated ai_auto_reply to ${ai_auto_reply} for conversation ${conversationId}`);
     res.json({ success: true, ai_auto_reply });
@@ -1068,35 +1040,7 @@ app.get('/api/admin/conversations/:id/messages', requireAdminAuth, async (req: R
   }
 });
 
-// API: Update conversation auto-reply setting (admin)
-app.patch('/api/admin/conversations/:id/auto-reply', requireAdminAuth, (req: Request, res: Response) => {
-  try {
-    const conversationId = parseInt(req.params.id);
-    const { ai_auto_reply } = req.body;
-
-    console.log(`🔄 Updating auto-reply for conversation ${conversationId}:`, { ai_auto_reply, type: typeof ai_auto_reply });
-
-    if (typeof ai_auto_reply !== 'number' || (ai_auto_reply !== 0 && ai_auto_reply !== 1)) {
-      console.error(`❌ Invalid ai_auto_reply value: ${ai_auto_reply} (type: ${typeof ai_auto_reply})`);
-      return res.status(400).json({ error: 'ai_auto_reply must be 0 or 1' });
-    }
-
-    // Verify conversation exists
-    const conversation = dbQueries.getConversationById(conversationId);
-    if (!conversation) {
-      console.error(`❌ Conversation ${conversationId} not found`);
-      return res.status(404).json({ error: 'Conversation not found' });
-    }
-
-    console.log(`📋 Conversation found:`, { id: conversation.id, current_ai_auto_reply: conversation.ai_auto_reply });
-    dbQueries.updateConversationAutoReply(conversationId, ai_auto_reply);
-    console.log(`✅ Updated ai_auto_reply to ${ai_auto_reply} for conversation ${conversationId}`);
-    res.json({ success: true, ai_auto_reply });
-  } catch (error) {
-    console.error('❌ Error updating auto-reply setting:', error);
-    res.status(500).json({ error: 'Failed to update auto-reply setting' });
-  }
-});
+// Auto-reply toggle endpoint removed - AI always responds automatically
 
 // API: Send message from admin
 app.post('/api/admin/conversations/:id/send', requireAdminAuth, async (req: Request, res: Response) => {
