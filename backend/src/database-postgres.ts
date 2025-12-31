@@ -1268,3 +1268,5 @@ export const dbQueries = {
   },
 };
 
+export { initDatabase };
+

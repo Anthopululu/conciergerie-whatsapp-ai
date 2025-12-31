@@ -115,8 +115,8 @@ async function seed() {
     await (dbQueriesToUse as any).addMessageAsync(conv1.id, 'Bonjour, à quelle heure ouvre la conciergerie demain ?', 'client');
     await (dbQueriesToUse as any).addMessageAsync(conv1.id, 'Bonjour ! La conciergerie de la Résidence Le Parc est ouverte du lundi au vendredi de 8h à 19h. Demain étant un jour de semaine, nous ouvrons à 8h. Comment puis-je vous aider ?', 'concierge', undefined, undefined, 1);
   } else {
-    dbQueriesToUse.addMessage(conv1.id, 'client', 'Bonjour, à quelle heure ouvre la conciergerie demain ?');
-    dbQueriesToUse.addMessage(conv1.id, 'concierge', 'Bonjour ! La conciergerie de la Résidence Le Parc est ouverte du lundi au vendredi de 8h à 19h. Demain étant un jour de semaine, nous ouvrons à 8h. Comment puis-je vous aider ?', null, 1);
+    (dbQueriesToUse as any).addMessage(conv1.id, 'client', 'Bonjour, à quelle heure ouvre la conciergerie demain ?');
+    (dbQueriesToUse as any).addMessage(conv1.id, 'concierge', 'Bonjour ! La conciergerie de la Résidence Le Parc est ouverte du lundi au vendredi de 8h à 19h. Demain étant un jour de semaine, nous ouvrons à 8h. Comment puis-je vous aider ?', null, 1);
   }
   console.log('✓ Created conversation 1 for Résidence Le Parc');
 
@@ -129,9 +129,9 @@ async function seed() {
     await (dbQueriesToUse as any).addMessageAsync(conv2.id, 'Bien sûr ! Pour réserver la salle commune, je vous invite à nous contacter par téléphone au 01 23 45 67 89 ou à passer directement à la conciergerie. La réservation doit être faite au moins 48h à l\'avance. Souhaitez-vous que je note votre demande ?', 'concierge', undefined, undefined, 1);
     await (dbQueriesToUse as any).addMessageAsync(conv2.id, 'Oui merci, c\'est pour 20 personnes de 14h à 18h', 'client');
   } else {
-    dbQueriesToUse.addMessage(conv2.id, 'client', 'Je voudrais réserver la salle commune pour samedi prochain');
-    dbQueriesToUse.addMessage(conv2.id, 'concierge', 'Bien sûr ! Pour réserver la salle commune, je vous invite à nous contacter par téléphone au 01 23 45 67 89 ou à passer directement à la conciergerie. La réservation doit être faite au moins 48h à l\'avance. Souhaitez-vous que je note votre demande ?', null, 1);
-    dbQueriesToUse.addMessage(conv2.id, 'client', 'Oui merci, c\'est pour 20 personnes de 14h à 18h');
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv2.id, 'client', 'Je voudrais réserver la salle commune pour samedi prochain');
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv2.id, 'concierge', 'Bien sûr ! Pour réserver la salle commune, je vous invite à nous contacter par téléphone au 01 23 45 67 89 ou à passer directement à la conciergerie. La réservation doit être faite au moins 48h à l\'avance. Souhaitez-vous que je note votre demande ?', null, 1);
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv2.id, 'client', 'Oui merci, c\'est pour 20 personnes de 14h à 18h');
   }
   console.log('✓ Created conversation 2 for Résidence Le Parc');
 
@@ -142,7 +142,7 @@ async function seed() {
   if (USE_POSTGRES) {
     await (dbQueriesToUse as any).addMessageAsync(conv3.id, 'Bonjour', 'client');
   } else {
-    dbQueriesToUse.addMessage(conv3.id, 'client', 'Bonjour');
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv3.id, 'client', 'Bonjour');
   }
   console.log('✓ Created conversation 3 for Résidence Le Parc');
 
@@ -170,9 +170,9 @@ async function seed() {
     await (dbQueriesToUse as any).addMessageAsync(conv4.id, 'Bonjour ! Le parking visiteurs se trouve côté Est du bâtiment. L\'accès est libre de 7h à 22h. Si vos invités arrivent après 22h, ils peuvent me contacter pour obtenir un code d\'accès temporaire.', 'concierge', undefined, undefined, 1);
     await (dbQueriesToUse as any).addMessageAsync(conv4.id, 'Parfait, ils arrivent vers 19h donc ça ira. Merci !', 'client');
   } else {
-    dbQueriesToUse.addMessage(conv4.id, 'client', 'Mes invités arrivent ce soir, comment peuvent-ils accéder au parking ?');
-    dbQueriesToUse.addMessage(conv4.id, 'concierge', 'Bonjour ! Le parking visiteurs se trouve côté Est du bâtiment. L\'accès est libre de 7h à 22h. Si vos invités arrivent après 22h, ils peuvent me contacter pour obtenir un code d\'accès temporaire.', null, 1);
-    dbQueriesToUse.addMessage(conv4.id, 'client', 'Parfait, ils arrivent vers 19h donc ça ira. Merci !');
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv4.id, 'client', 'Mes invités arrivent ce soir, comment peuvent-ils accéder au parking ?');
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv4.id, 'concierge', 'Bonjour ! Le parking visiteurs se trouve côté Est du bâtiment. L\'accès est libre de 7h à 22h. Si vos invités arrivent après 22h, ils peuvent me contacter pour obtenir un code d\'accès temporaire.', null, 1);
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv4.id, 'client', 'Parfait, ils arrivent vers 19h donc ça ira. Merci !');
   }
   console.log('✓ Created conversation 1 for Domaine des Jardins');
 
@@ -184,8 +184,8 @@ async function seed() {
     await (dbQueriesToUse as any).addMessageAsync(conv5.id, 'C\'est quand le ramassage des poubelles jaunes ?', 'client');
     await (dbQueriesToUse as any).addMessageAsync(conv5.id, 'Le tri sélectif (poubelles jaunes) est ramassé le jeudi matin. Merci de sortir vos poubelles la veille au soir. Les ordures ménagères sont ramassées le mardi et vendredi.', 'concierge', undefined, undefined, 1);
   } else {
-    dbQueriesToUse.addMessage(conv5.id, 'client', 'C\'est quand le ramassage des poubelles jaunes ?');
-    dbQueriesToUse.addMessage(conv5.id, 'concierge', 'Le tri sélectif (poubelles jaunes) est ramassé le jeudi matin. Merci de sortir vos poubelles la veille au soir. Les ordures ménagères sont ramassées le mardi et vendredi.', null, 1);
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv5.id, 'client', 'C\'est quand le ramassage des poubelles jaunes ?');
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv5.id, 'concierge', 'Le tri sélectif (poubelles jaunes) est ramassé le jeudi matin. Merci de sortir vos poubelles la veille au soir. Les ordures ménagères sont ramassées le mardi et vendredi.', null, 1);
   }
   console.log('✓ Created conversation 2 for Domaine des Jardins');
 
@@ -198,9 +198,9 @@ async function seed() {
     await (dbQueriesToUse as any).addMessageAsync(conv6.id, 'Oui, la piscine est actuellement ouverte ! Elle est accessible de juin à septembre, tous les jours de 10h à 20h. L\'accès est réservé aux résidents et leurs invités. N\'oubliez pas votre bonnet, il est obligatoire ! 😊', 'concierge', undefined, undefined, 1);
     await (dbQueriesToUse as any).addMessageAsync(conv6.id, 'Super merci ! Et pour les enfants aussi le bonnet ?', 'client');
   } else {
-    dbQueriesToUse.addMessage(conv6.id, 'client', 'La piscine est ouverte en ce moment ?');
-    dbQueriesToUse.addMessage(conv6.id, 'concierge', 'Oui, la piscine est actuellement ouverte ! Elle est accessible de juin à septembre, tous les jours de 10h à 20h. L\'accès est réservé aux résidents et leurs invités. N\'oubliez pas votre bonnet, il est obligatoire ! 😊', null, 1);
-    dbQueriesToUse.addMessage(conv6.id, 'client', 'Super merci ! Et pour les enfants aussi le bonnet ?');
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv6.id, 'client', 'La piscine est ouverte en ce moment ?');
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv6.id, 'concierge', 'Oui, la piscine est actuellement ouverte ! Elle est accessible de juin à septembre, tous les jours de 10h à 20h. L\'accès est réservé aux résidents et leurs invités. N\'oubliez pas votre bonnet, il est obligatoire ! 😊', null, 1);
+    (dbQueriesToUse as typeof dbQueries).addMessage(conv6.id, 'client', 'Super merci ! Et pour les enfants aussi le bonnet ?');
   }
   console.log('✓ Created conversation 3 for Domaine des Jardins');
 

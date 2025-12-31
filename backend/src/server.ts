@@ -469,7 +469,7 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
 
     // Get or create conversation for this conciergerie
     const conversation = USE_POSTGRES
-      ? await dbQueries.getOrCreateConversationAsync(From, conciergerie.id)
+      ? await (dbQueriesPostgres as any).getOrCreateConversationAsync(From, conciergerie.id)
       : dbQueries.getOrCreateConversation(From, conciergerie.id);
     console.log(`📋 Conversation retrieved/created:`, {
       id: conversation.id,
@@ -489,7 +489,7 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
     if (USE_POSTGRES) {
       await (dbQueriesPostgres as any).addMessageAsync(conversation.id, Body, 'client', undefined, undefined, 0);
     } else {
-      dbQueries.addMessage(conversation.id, Body, 'client', undefined, undefined, 0);
+      dbQueries.addMessage(conversation.id, 'client', Body, null, 0);
     }
 
     // Respond to Twilio immediately (required to acknowledge receipt)
