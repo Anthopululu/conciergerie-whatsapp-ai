@@ -167,7 +167,7 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
 
       setSuccessMessage('Configuration Twilio enregistrée avec succès !');
       
-      // Also update sandbox code if provided
+      // Update sandbox code if provided (optional, only for sandbox testing)
       if (sandboxCode.trim()) {
         try {
           await onUpdateJoinCode(conciergerieId, sandboxCode.trim());
@@ -409,28 +409,7 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
             <div className="edit-section">
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  Code Sandbox Twilio
-                </label>
-                <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                  <span style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: '5px', fontSize: '14px', color: '#666' }}>join</span>
-                  <input
-                    type="text"
-                    className="join-code-input"
-                    placeholder="happy-monkey"
-                    value={sandboxCode}
-                    onChange={(e) => setSandboxCode(e.target.value)}
-                    disabled={isSubmittingConfig}
-                    style={{ flex: 1 }}
-                  />
-                </div>
-                <small style={{ display: 'block', marginTop: '5px', color: '#666', fontSize: '12px' }}>
-                  Trouvez votre code dans le <a href="https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn" target="_blank" rel="noopener noreferrer">Twilio Console</a>
-                </small>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  Numéro WhatsApp Twilio (Production)
+                  Numéro WhatsApp Twilio <span style={{ color: '#e74c3c' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -440,9 +419,10 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
                   onChange={(e) => setWhatsappNumber(e.target.value)}
                   disabled={isSubmittingConfig}
                   style={{ width: '100%' }}
+                  required
                 />
                 <small style={{ display: 'block', marginTop: '5px', color: '#666', fontSize: '12px' }}>
-                  Laissez vide pour utiliser le numéro sandbox
+                  Numéro WhatsApp fourni par Twilio (sandbox ou production)
                 </small>
               </div>
 
