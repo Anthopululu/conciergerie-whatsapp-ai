@@ -2,8 +2,11 @@ import dotenv from 'dotenv';
 import path from 'path';
 
 // Load environment variables FIRST before importing other modules
+// Try backend/.env first, then root .env as fallback
+dotenv.config({ path: path.join(process.cwd(), '.env') });
 dotenv.config({ path: path.join(process.cwd(), '..', '.env') });
 
+import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
