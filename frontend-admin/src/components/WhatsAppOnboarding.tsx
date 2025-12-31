@@ -110,13 +110,8 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
 
   const handleEditConfig = (conciergerie: Conciergerie) => {
     setEditingConfigId(conciergerie.id);
-    // Check if whatsapp_number is the default sandbox number
-    const isDefaultSandbox = conciergerie.whatsapp_number === DEFAULT_TWILIO_SANDBOX_NUMBER || 
-                             conciergerie.whatsapp_number === 'whatsapp:+14155238886' ||
-                             (!conciergerie.whatsapp_number);
-    // If it's the default sandbox, put it in sandboxNumber field, otherwise in whatsappNumber
-    setWhatsappNumber(isDefaultSandbox ? '' : (conciergerie.whatsapp_number || ''));
-    setSandboxNumber(isDefaultSandbox ? (conciergerie.whatsapp_number || DEFAULT_TWILIO_SANDBOX_NUMBER) : DEFAULT_TWILIO_SANDBOX_NUMBER);
+    // Populate form with existing values
+    setWhatsappNumber(conciergerie.whatsapp_number || '');
     setTwilioSid(conciergerie.twilio_account_sid || '');
     setTwilioToken(conciergerie.twilio_auth_token || '');
     setSandboxCode(conciergerie.sandbox_join_code || '');
@@ -208,7 +203,6 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
   const handleCancelConfig = () => {
     setEditingConfigId(null);
     setWhatsappNumber('');
-    setSandboxNumber('');
     setTwilioSid('');
     setTwilioToken('');
     setSandboxCode('');
