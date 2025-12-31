@@ -7,9 +7,11 @@ async function seed() {
   console.log('🌱 Seeding database with test data...');
   console.log(`📊 Using ${USE_POSTGRES ? 'PostgreSQL' : 'SQLite'} database`);
 
-  // Initialize database
-  await initDatabase();
-  
+  // Initialize database (only for SQLite - PostgreSQL is already initialized by server.ts)
+  if (!USE_POSTGRES) {
+    await initDatabase();
+  }
+
   // Select the right dbQueries based on database type
   const dbQueriesToUse = USE_POSTGRES ? dbQueriesPostgres : dbQueries;
 
