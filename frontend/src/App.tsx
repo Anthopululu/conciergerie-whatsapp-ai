@@ -40,7 +40,6 @@ function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [conciergerie, setConciergerie] = useState<{ id: number; name: string; email: string } | null>(null);
-  const [conversations, setConversations] = useState<Conversation[]>([]);
   const [displayedConversations, setDisplayedConversations] = useState<Conversation[]>([]);
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
