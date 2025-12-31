@@ -519,32 +519,29 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
           return;
         }
         
-        // Check ai_auto_reply - use conversationData (from DB) or fallback to conversation object
-        // Force conversion to number: if it's a date string or other non-numeric value, default to 1
-        let aiAutoReplyValue = conversationData.ai_auto_reply ?? conversation.ai_auto_reply ?? 1;
-        console.log(`🔍 ai_auto_reply RAW value: ${aiAutoReplyValue}, type: ${typeof aiAutoReplyValue}`);
+        // FIX: Force ai_auto_reply to be a number (0 or 1)
+        // Handle case where PostgreSQL returns it as a date string
+        let aiAutoReplyValue: number;
+        const rawValue = conversationData.ai_auto_reply ?? conversation.ai_auto_reply;
         
-        // Convert to number: handle date strings, null, undefined, etc.
-        if (typeof aiAutoReplyValue === 'string' && aiAutoReplyValue.includes('-') && aiAutoReplyValue.includes(':')) {
-          // It's a date string, default to 1
-          console.log(`⚠️  ai_auto_reply is a date string (${aiAutoReplyValue}), defaulting to 1`);
-          aiAutoReplyValue = 1;
-        } else if (typeof aiAutoReplyValue === 'number') {
-          // Already a number, use it
-          aiAutoReplyValue = aiAutoReplyValue;
-        } else if (aiAutoReplyValue === '0' || aiAutoReplyValue === 0 || aiAutoReplyValue === false) {
-          // Explicitly 0
-          aiAutoReplyValue = 0;
-        } else if (aiAutoReplyValue === '1' || aiAutoReplyValue === 1 || aiAutoReplyValue === true) {
-          // Explicitly 1
-          aiAutoReplyValue = 1;
+        if (typeof rawValue === 'number') {
+          aiAutoReplyValue = rawValue === 0 ? 0 : 1;
+        } else if (typeof rawValue === 'string') {
+          // If it's a string that looks like a date, default to 1
+          if (rawValue.includes('-') && rawValue.includes(':')) {
+            console.log(`⚠️  ai_auto_reply is a date string (${rawValue}), defaulting to 1`);
+            aiAutoReplyValue = 1;
+          } else {
+            // Try to parse as number
+            const parsed = parseInt(rawValue, 10);
+            aiAutoReplyValue = isNaN(parsed) ? 1 : (parsed === 0 ? 0 : 1);
+          }
         } else {
-          // Unknown value, default to 1
-          console.log(`⚠️  ai_auto_reply has unknown value (${aiAutoReplyValue}), defaulting to 1`);
+          // null, undefined, or other - default to 1
           aiAutoReplyValue = 1;
         }
         
-        console.log(`🔍 ai_auto_reply CONVERTED value: ${aiAutoReplyValue} (type: ${typeof aiAutoReplyValue})`);
+        console.log(`🔍 ai_auto_reply: raw=${rawValue}, converted=${aiAutoReplyValue} (type: ${typeof aiAutoReplyValue})`);
         
         if (aiAutoReplyValue === 0) {
           console.log(`⏸️  AI auto-reply is disabled (ai_auto_reply=${aiAutoReplyValue}) for conversation ${conversation.id}. Skipping automatic response.`);

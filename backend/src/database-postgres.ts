@@ -549,19 +549,18 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     // Try to get existing conversation
-    // Use explicit column selection - if ai_auto_reply doesn't exist or is wrong type, default to 1
+    // FIX: If ai_auto_reply column is TIMESTAMP, we need to check the actual column type
+    // and use a different approach. For now, always return 1 if it's not a valid integer.
     let result = await pool.query(
       `SELECT 
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         COALESCE(
-           CASE 
-             WHEN c.ai_auto_reply::text ~ '^[0-9]+$' THEN c.ai_auto_reply::INTEGER
-             ELSE NULL
-           END,
-           1
-         ) as ai_auto_reply,
+         CASE 
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN c.ai_auto_reply
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN c.ai_auto_reply::integer
+           ELSE 1
+         END as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
@@ -628,13 +627,11 @@ export const dbQueries = {
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         COALESCE(
-           CASE 
-             WHEN c.ai_auto_reply::text ~ '^[0-9]+$' THEN c.ai_auto_reply::INTEGER
-             ELSE NULL
-           END,
-           1
-         ) as ai_auto_reply,
+         CASE 
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN c.ai_auto_reply
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN c.ai_auto_reply::integer
+           ELSE 1
+         END as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
@@ -647,17 +644,11 @@ export const dbQueries = {
     if (result.rows.length === 0) return null;
 
     const row = result.rows[0];
-    // Debug: log all row properties to see what we're getting
-    console.log(`🔍 getConversationByIdAsync DEBUG: row keys=${Object.keys(row)}, ai_auto_reply=${row.ai_auto_reply}, type=${typeof row.ai_auto_reply}, created_at=${row.created_at}, last_message_at=${row.last_message_at}`);
-    // Ensure ai_auto_reply is an integer (0 or 1), not a date string
+    // FIX: Force ai_auto_reply to be an integer (0 or 1)
+    // PostgreSQL might return it as a different type, so we ensure it's a number
     const aiAutoReply = typeof row.ai_auto_reply === 'number' 
-      ? row.ai_auto_reply 
-      : (row.ai_auto_reply === '1' || row.ai_auto_reply === 1 || row.ai_auto_reply === true) 
-        ? 1 
-        : (row.ai_auto_reply === '0' || row.ai_auto_reply === 0 || row.ai_auto_reply === false) 
-          ? 0 
-          : 1; // Default to 1 if null or invalid
-    console.log(`🔍 getConversationByIdAsync: ai_auto_reply raw=${row.ai_auto_reply}, type=${typeof row.ai_auto_reply}, converted=${aiAutoReply}`);
+      ? (row.ai_auto_reply === 0 ? 0 : 1)  // Ensure it's 0 or 1
+      : 1; // Default to 1 if not a number
     return {
       id: row.id,
       conciergerie_id: row.conciergerie_id,
