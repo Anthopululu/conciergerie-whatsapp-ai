@@ -56,7 +56,7 @@ function App() {
           // Session is valid, set token in state
           setAdminToken(token);
         })
-        .catch((error) => {
+        .catch((_error) => {
           // Session invalid (server restarted or token expired)
           console.warn('Admin session expired, clearing token');
           setAdminToken(null);
