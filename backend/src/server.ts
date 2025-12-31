@@ -517,7 +517,7 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
         // Always save the AI response in database first
         console.log(`💾 Saving AI response to database...`);
         if (USE_POSTGRES) {
-          await dbQueries.addMessageAsync(conversation.id, aiResponse, 'concierge', undefined, undefined, 1);
+          await (dbQueriesPostgres as any).addMessageAsync(conversation.id, aiResponse, 'concierge', undefined, undefined, 1);
         } else {
           dbQueries.addMessage(conversation.id, aiResponse, 'concierge', undefined, undefined, 1);
         }
@@ -1015,7 +1015,7 @@ app.post('/api/admin/conversations/:id/send', requireAdminAuth, async (req: Requ
 
     // Add message to database (manual message, not AI)
     if (USE_POSTGRES) {
-      await dbQueries.addMessageAsync(conversationId, message, 'concierge', undefined, undefined, 0);
+      await (dbQueriesPostgres as any).addMessageAsync(conversationId, message, 'concierge', undefined, undefined, 0);
     } else {
       dbQueries.addMessage(conversationId, message, 'concierge', undefined, undefined, 0);
     }
