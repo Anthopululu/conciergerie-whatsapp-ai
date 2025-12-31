@@ -85,7 +85,7 @@ app.get('/health', (req: Request, res: Response) => {
 app.get('/api/test/whatsapp-config', (_req: Request, res: Response) => {
   try {
     const conciergeries = dbQueries.getAllConciegeriesWithSecrets();
-    const configStatus = conciergeries.map(c => ({
+    const configStatus = conciergeries.map((c: any) => ({
       id: c.id,
       name: c.name,
       hasWhatsAppNumber: !!c.whatsapp_number,
@@ -118,7 +118,7 @@ app.get('/api/test/webhook-status', (_req: Request, res: Response) => {
       serverUrl: `http://localhost:${PORT}`,
       webhookEndpoint: `http://localhost:${PORT}/webhook/whatsapp`,
       twilioWebhookUrl: webhookUrl,
-      conciergeries: conciergeries.map(c => ({
+      conciergeries: conciergeries.map((c: any) => ({
         id: c.id,
         name: c.name,
         hasWhatsAppNumber: !!c.whatsapp_number,
@@ -345,7 +345,7 @@ app.get('/api/auth/me', (req: Request, res: Response) => {
 
     const session = sessions.get(token)!;
     const conciergeries = dbQueries.getAllConciergeries();
-    const conciergerie = conciergeries.find(c => c.id === session.conciergerieId);
+    const conciergerie = conciergeries.find((c: any) => c.id === session.conciergerieId);
 
     if (!conciergerie) {
       sessions.delete(token);
@@ -562,7 +562,7 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
             console.log(`⚠️  Twilio client not initialized for conciergerie ${conciergerie.id}, attempting to initialize...`);
             // Use getAllConciegeriesWithSecrets to get the secrets
             const allConciergeries = dbQueries.getAllConciegeriesWithSecrets();
-            const conciergerieWithSecrets = allConciergeries.find(c => c.id === conciergerie.id);
+            const conciergerieWithSecrets = allConciergeries.find((c: any) => c.id === conciergerie.id);
             console.log(`🔍 Looking for conciergerie ${conciergerie.id} in ${allConciergeries.length} conciergeries`);
             console.log(`🔍 Found conciergerie: ${conciergerieWithSecrets ? 'YES' : 'NO'}`);
             if (conciergerieWithSecrets) {
@@ -705,7 +705,7 @@ app.post('/api/conversations/:id/send', requireAuth, async (req: Request, res: R
 
     // Get conversation to verify it belongs to this conciergerie
     const conversations = dbQueries.getConversationsByConciergerie(conciergerieId);
-    const conversation = conversations.find(c => c.id === conversationId);
+    const conversation = conversations.find((c: any) => c.id === conversationId);
 
     if (!conversation) {
       return res.status(404).json({ error: 'Conversation not found' });
@@ -713,7 +713,7 @@ app.post('/api/conversations/:id/send', requireAuth, async (req: Request, res: R
 
     // Get conciergerie details for Twilio config
     const conciergeries = dbQueries.getAllConciergeries();
-    const conciergerie = conciergeries.find(c => c.id === conciergerieId);
+    const conciergerie = conciergeries.find((c: any) => c.id === conciergerieId);
 
     // Send via Twilio using conciergerie's credentials
     if (!conciergerie?.whatsapp_number) {
@@ -1099,7 +1099,7 @@ app.post('/api/admin/conversations/:id/send', requireAdminAuth, async (req: Requ
 
     // Get conversation to find the client phone number and conciergerie
     const conversations = dbQueries.getAllConversations();
-    const conversation = conversations.find(c => c.id === conversationId);
+    const conversation = conversations.find((c: any) => c.id === conversationId);
 
     if (!conversation) {
       return res.status(404).json({ error: 'Conversation not found' });
@@ -1155,7 +1155,7 @@ app.patch('/api/admin/conciergeries/:id', requireAdminAuth, (req: Request, res: 
     }
 
     // Check if email is already used by another conciergerie
-    const existingConciergerie = dbQueries.getAllConciergeries().find(c => c.email === email && c.id !== id);
+    const existingConciergerie = dbQueries.getAllConciergeries().find((c: any) => c.email === email && c.id !== id);
     if (existingConciergerie) {
       return res.status(409).json({ error: 'Email already exists' });
     }
