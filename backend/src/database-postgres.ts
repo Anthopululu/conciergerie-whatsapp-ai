@@ -560,13 +560,18 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     // Try to get existing conversation
-    // FIX: Use explicit CAST to force INTEGER type
+    // FIX: Force INTEGER - if column is TIMESTAMP, use 1 as default
     let result = await pool.query(
       `SELECT 
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         CAST(COALESCE(c.ai_auto_reply, 1) AS INTEGER) as ai_auto_reply,
+         CASE 
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN COALESCE(c.ai_auto_reply, 1)
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN COALESCE(c.ai_auto_reply, 1)::integer
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'smallint' THEN COALESCE(c.ai_auto_reply, 1)::integer
+           ELSE 1
+         END::INTEGER as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
@@ -637,7 +642,12 @@ export const dbQueries = {
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         CAST(COALESCE(c.ai_auto_reply, 1) AS INTEGER) as ai_auto_reply,
+         CASE 
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN COALESCE(c.ai_auto_reply, 1)
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN COALESCE(c.ai_auto_reply, 1)::integer
+           WHEN pg_typeof(c.ai_auto_reply)::text = 'smallint' THEN COALESCE(c.ai_auto_reply, 1)::integer
+           ELSE 1
+         END::INTEGER as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
@@ -651,18 +661,27 @@ export const dbQueries = {
 
     const row = result.rows[0];
     // FIX: Force ai_auto_reply to be an integer (0 or 1)
-    // The SQL query should already return an INTEGER, but we ensure it's a number
+    // Handle all possible types that PostgreSQL might return
     let aiAutoReply: number;
-    if (typeof row.ai_auto_reply === 'number') {
-      aiAutoReply = row.ai_auto_reply === 0 ? 0 : 1;
-    } else if (typeof row.ai_auto_reply === 'string') {
-      // If somehow it's still a string (shouldn't happen with CAST), parse it
-      const parsed = parseInt(row.ai_auto_reply, 10);
-      aiAutoReply = isNaN(parsed) ? 1 : (parsed === 0 ? 0 : 1);
+    const rawAiAutoReply = row.ai_auto_reply;
+    
+    if (typeof rawAiAutoReply === 'number') {
+      aiAutoReply = rawAiAutoReply === 0 ? 0 : 1;
+    } else if (typeof rawAiAutoReply === 'string') {
+      // If it's a date string or other string, default to 1
+      if (rawAiAutoReply.includes('-') && rawAiAutoReply.includes(':')) {
+        console.log(`⚠️  getConversationByIdAsync: ai_auto_reply is date string "${rawAiAutoReply}", converting to 1`);
+        aiAutoReply = 1;
+      } else {
+        const parsed = parseInt(rawAiAutoReply, 10);
+        aiAutoReply = isNaN(parsed) ? 1 : (parsed === 0 ? 0 : 1);
+      }
     } else {
-      aiAutoReply = 1; // Default to 1
+      console.log(`⚠️  getConversationByIdAsync: ai_auto_reply is ${rawAiAutoReply} (type: ${typeof rawAiAutoReply}), defaulting to 1`);
+      aiAutoReply = 1;
     }
-    console.log(`🔍 getConversationByIdAsync: ai_auto_reply=${row.ai_auto_reply} (type: ${typeof row.ai_auto_reply}) -> converted=${aiAutoReply}`);
+    
+    console.log(`✅ getConversationByIdAsync: ai_auto_reply=${rawAiAutoReply} -> ${aiAutoReply}`);
     return {
       id: row.id,
       conciergerie_id: row.conciergerie_id,
