@@ -502,8 +502,9 @@ export const dbQueries = {
     saveDatabase();
 
     // Get the last inserted message for this conversation
+    // Use explicit column names to avoid column order issues
     const result = db.exec(
-      'SELECT * FROM messages WHERE conversation_id = ? ORDER BY id DESC LIMIT 1',
+      'SELECT id, conversation_id, sender, message, ai_suggestion, is_ai, created_at FROM messages WHERE conversation_id = ? ORDER BY id DESC LIMIT 1',
       [conversationId]
     );
 
@@ -513,11 +514,11 @@ export const dbQueries = {
 
     const row = result[0].values[0];
     
-    // Column order in DB (after migration): id, conversation_id, sender, message, ai_suggestion, created_at, is_ai
-    // So: row[0]=id, row[1]=conversation_id, row[2]=sender, row[3]=message, row[4]=ai_suggestion, row[5]=created_at, row[6]=is_ai
+    // Explicit column order: id, conversation_id, sender, message, ai_suggestion, is_ai, created_at
+    // So: row[0]=id, row[1]=conversation_id, row[2]=sender, row[3]=message, row[4]=ai_suggestion, row[5]=is_ai, row[6]=created_at
     
-    const dbIsAi = row[6] !== null && row[6] !== undefined ? (row[6] as number) : isAi;
-    console.log(`🔍 Retrieved message: is_ai from DB=${row[6]}, using=${dbIsAi}, original isAi param=${isAi}`);
+    const dbIsAi = row[5] !== null && row[5] !== undefined ? (row[5] as number) : isAi;
+    console.log(`🔍 Retrieved message: is_ai from DB=${row[5]}, using=${dbIsAi}, original isAi param=${isAi}`);
 
     return {
       id: row[0] as number,
@@ -526,7 +527,7 @@ export const dbQueries = {
       message: row[3] as string,
       ai_suggestion: row[4] as string | null,
       is_ai: dbIsAi,  // Use isAi parameter if DB value is null/undefined
-      created_at: row[5] as string,   // created_at is at index 5
+      created_at: row[6] as string,   // created_at is at index 6
     };
   },
 
@@ -600,31 +601,33 @@ export const dbQueries = {
 
   // Get messages for a conversation
   getMessages(conversationId: number): Message[] {
-    const result = db.exec('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC', [conversationId]);
+    // Use explicit column names to avoid column order issues
+    const result = db.exec('SELECT id, conversation_id, sender, message, ai_suggestion, is_ai, created_at FROM messages WHERE conversation_id = ? ORDER BY created_at ASC', [conversationId]);
 
     if (result.length === 0 || result[0].values.length === 0) {
       return [];
     }
 
     return result[0].values.map((row: any) => {
-      // Column order in DB: id, conversation_id, sender, message, ai_suggestion, created_at, is_ai
-      // So: row[0]=id, row[1]=conversation_id, row[2]=sender, row[3]=message, row[4]=ai_suggestion, row[5]=created_at, row[6]=is_ai
+      // Explicit column order: id, conversation_id, sender, message, ai_suggestion, is_ai, created_at
+      // So: row[0]=id, row[1]=conversation_id, row[2]=sender, row[3]=message, row[4]=ai_suggestion, row[5]=is_ai, row[6]=created_at
       return {
         id: row[0] as number,
         conversation_id: row[1] as number,
         sender: row[2] as 'client' | 'concierge',
         message: row[3] as string,
         ai_suggestion: row[4] as string | null,
-        is_ai: (row[6] as number) || 0,  // is_ai is at index 6
-        created_at: row[5] as string,   // created_at is at index 5
+        is_ai: row[5] !== null && row[5] !== undefined ? (row[5] as number) : 0,  // is_ai is at index 5
+        created_at: row[6] as string,   // created_at is at index 6
       };
     });
   },
 
   // Get conversation history for AI context
   getConversationHistory(conversationId: number, limit: number = 10): Message[] {
+    // Use explicit column names to avoid column order issues
     const result = db.exec(
-      'SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT ?',
+      'SELECT id, conversation_id, sender, message, ai_suggestion, is_ai, created_at FROM messages WHERE conversation_id = ? ORDER BY created_at DESC LIMIT ?',
       [conversationId, limit]
     );
 
@@ -633,16 +636,16 @@ export const dbQueries = {
     }
 
     return result[0].values.map((row: any) => {
-      // Column order in DB: id, conversation_id, sender, message, ai_suggestion, created_at, is_ai
-      // So: row[0]=id, row[1]=conversation_id, row[2]=sender, row[3]=message, row[4]=ai_suggestion, row[5]=created_at, row[6]=is_ai
+      // Explicit column order: id, conversation_id, sender, message, ai_suggestion, is_ai, created_at
+      // So: row[0]=id, row[1]=conversation_id, row[2]=sender, row[3]=message, row[4]=ai_suggestion, row[5]=is_ai, row[6]=created_at
       return {
         id: row[0] as number,
         conversation_id: row[1] as number,
         sender: row[2] as 'client' | 'concierge',
         message: row[3] as string,
         ai_suggestion: row[4] as string | null,
-        is_ai: (row[6] as number) || 0,  // is_ai is at index 6
-        created_at: row[5] as string,   // created_at is at index 5
+        is_ai: row[5] !== null && row[5] !== undefined ? (row[5] as number) : 0,  // is_ai is at index 5
+        created_at: row[6] as string,   // created_at is at index 6
       };
     });
   },
