@@ -1432,16 +1432,26 @@ app.listen(PORT, () => {
   console.log(`💬 Ready to receive messages!`);
 
   // Wait a bit for database to be ready, then initialize Twilio clients
-  setTimeout(() => {
+  setTimeout(async () => {
     try {
       const conciergeries = dbQueries.getAllConciergeries();
       if (conciergeries.length === 0) {
-        console.log('⚠️  No conciergeries found. Creating default conciergerie...');
-        const demo = dbQueries.createConciergerie('Conciergerie Demo', 'demo@example.com', 'demo123');
-        console.log('✅ Default conciergerie created: demo@example.com / demo123');
-        // Also create a main conciergerie
-        const main = dbQueries.createConciergerie('Conciergerie Principale', 'conciergerie@example.com', 'concierge123');
-        console.log('✅ Main conciergerie created: conciergerie@example.com / concierge123');
+        console.log('⚠️  No conciergeries found. Initializing with seed data...');
+        try {
+          const seedModule = await import('./seed-data');
+          const seed = seedModule.default || seedModule;
+          await seed();
+          console.log('✅ Seed data initialized successfully');
+          console.log('📋 Created conciergeries:');
+          console.log('   - Résidence Le Parc: parc@conciergerie.fr / parc123');
+          console.log('   - Domaine des Jardins: jardins@conciergerie.fr / jardins123');
+          console.log('📚 Created 6 FAQs (3 per conciergerie)');
+        } catch (error: any) {
+          console.error('❌ Error initializing seed data:', error.message);
+          // Fallback: create simple conciergeries
+          const demo = dbQueries.createConciergerie('Conciergerie Demo', 'demo@example.com', 'demo123');
+          console.log('✅ Default conciergerie created: demo@example.com / demo123');
+        }
       } else {
         console.log(`ℹ️  ${conciergeries.length} conciergerie(s) already exist`);
 
