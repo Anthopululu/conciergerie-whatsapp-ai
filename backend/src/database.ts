@@ -147,12 +147,12 @@ async function initDatabase() {
     // Migration: Update existing messages from concierge to is_ai = 1
     // This assumes that existing concierge messages were AI-generated
     // (since manual sending was added later)
-    // Only update messages that were created before this migration
+    // Update ALL concierge messages to is_ai = 1 (they were all AI-generated before manual sending was added)
     try {
       const updateResult = db.exec(`
         UPDATE messages 
         SET is_ai = 1 
-        WHERE sender = 'concierge' AND is_ai = 0
+        WHERE sender = 'concierge' AND (is_ai = 0 OR is_ai IS NULL)
       `);
       // Note: sql.js doesn't return affected rows count directly
       // We'll check by querying after update
