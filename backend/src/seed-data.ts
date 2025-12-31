@@ -11,10 +11,13 @@ async function seed() {
   await initDatabase();
 
   // Twilio configuration (default for all conciergeries)
-  // Use environment variables with fallback to default values
-  const DEFAULT_WHATSAPP_NUMBER = process.env.DEFAULT_TWILIO_WHATSAPP_NUMBER || 'whatsapp:+14155238886';
-  const DEFAULT_TWILIO_ACCOUNT_SID = process.env.DEFAULT_TWILIO_ACCOUNT_SID || 'TWILIO_ACCOUNT_SID_ENV';
-  const DEFAULT_TWILIO_AUTH_TOKEN = process.env.DEFAULT_TWILIO_AUTH_TOKEN || 'TWILIO_AUTH_TOKEN_ENV';
+  // Use environment variables only - no hardcoded secrets
+  const DEFAULT_WHATSAPP_NUMBER = process.env.DEFAULT_TWILIO_WHATSAPP_NUMBER;
+  const DEFAULT_TWILIO_ACCOUNT_SID = process.env.DEFAULT_TWILIO_ACCOUNT_SID;
+  const DEFAULT_TWILIO_AUTH_TOKEN = process.env.DEFAULT_TWILIO_AUTH_TOKEN;
+  
+  // Only configure Twilio if environment variables are set
+  const hasTwilioConfig = DEFAULT_WHATSAPP_NUMBER && DEFAULT_TWILIO_ACCOUNT_SID && DEFAULT_TWILIO_AUTH_TOKEN;
 
   // Create two conciergeries with Twilio config
   console.log('\n📝 Creating conciergeries with Twilio configuration...');
@@ -23,13 +26,18 @@ async function seed() {
     : dbQueries.createConciergerie('Résidence Le Parc', 'parc@conciergerie.fr', 'parc123', DEFAULT_WHATSAPP_NUMBER, DEFAULT_TWILIO_ACCOUNT_SID, DEFAULT_TWILIO_AUTH_TOKEN);
   console.log(`✓ Created: ${conciergerie1.name}`);
 
-  // Update conciergerie1 with Twilio config if using PostgreSQL
-  if (USE_POSTGRES) {
-    await dbQueries.updateConciergerieAsync(conciergerie1.id, {
-      whatsapp_number: DEFAULT_WHATSAPP_NUMBER,
-      twilio_account_sid: DEFAULT_TWILIO_ACCOUNT_SID,
-      twilio_auth_token: DEFAULT_TWILIO_AUTH_TOKEN,
-    });
+  // Update conciergerie1 with Twilio config if available
+  if (hasTwilioConfig) {
+    if (USE_POSTGRES) {
+      await dbQueries.updateConciergerieAsync(conciergerie1.id, {
+        whatsapp_number: DEFAULT_WHATSAPP_NUMBER,
+        twilio_account_sid: DEFAULT_TWILIO_ACCOUNT_SID,
+        twilio_auth_token: DEFAULT_TWILIO_AUTH_TOKEN,
+      });
+    } else {
+      dbQueries.updateConciergerieWhatsApp(conciergerie1.id, DEFAULT_WHATSAPP_NUMBER!, DEFAULT_TWILIO_ACCOUNT_SID!, DEFAULT_TWILIO_AUTH_TOKEN!);
+    }
+    console.log(`✓ Twilio configured for ${conciergerie1.name}`);
   }
 
   const conciergerie2 = USE_POSTGRES
@@ -37,13 +45,18 @@ async function seed() {
     : dbQueries.createConciergerie('Domaine des Jardins', 'jardins@conciergerie.fr', 'jardins123', DEFAULT_WHATSAPP_NUMBER, DEFAULT_TWILIO_ACCOUNT_SID, DEFAULT_TWILIO_AUTH_TOKEN);
   console.log(`✓ Created: ${conciergerie2.name}`);
 
-  // Update conciergerie2 with Twilio config if using PostgreSQL
-  if (USE_POSTGRES) {
-    await dbQueries.updateConciergerieAsync(conciergerie2.id, {
-      whatsapp_number: DEFAULT_WHATSAPP_NUMBER,
-      twilio_account_sid: DEFAULT_TWILIO_ACCOUNT_SID,
-      twilio_auth_token: DEFAULT_TWILIO_AUTH_TOKEN,
-    });
+  // Update conciergerie2 with Twilio config if available
+  if (hasTwilioConfig) {
+    if (USE_POSTGRES) {
+      await dbQueries.updateConciergerieAsync(conciergerie2.id, {
+        whatsapp_number: DEFAULT_WHATSAPP_NUMBER,
+        twilio_account_sid: DEFAULT_TWILIO_ACCOUNT_SID,
+        twilio_auth_token: DEFAULT_TWILIO_AUTH_TOKEN,
+      });
+    } else {
+      dbQueries.updateConciergerieWhatsApp(conciergerie2.id, DEFAULT_WHATSAPP_NUMBER!, DEFAULT_TWILIO_ACCOUNT_SID!, DEFAULT_TWILIO_AUTH_TOKEN!);
+    }
+    console.log(`✓ Twilio configured for ${conciergerie2.name}`);
   }
 
   // Create FAQs for Conciergerie 1
