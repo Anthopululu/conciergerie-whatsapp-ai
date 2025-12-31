@@ -497,49 +497,7 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
     // Only if ai_auto_reply is enabled for this conversation
     (async () => {
       try {
-        // Use the conversation object we already have (it has ai_auto_reply)
-        // But refresh it from DB to ensure we have the latest value
-        const conversationData = USE_POSTGRES
-          ? await dbQueries.getConversationByIdAsync(conversation.id)
-          : dbQueries.getConversationById(conversation.id);
-        if (!conversationData) {
-          console.log(`❌ Conversation ${conversation.id} not found. Skipping automatic response.`);
-          return;
-        }
-        
-        // FIX: Force ai_auto_reply to be a number (0 or 1)
-        // Handle case where PostgreSQL returns it as a date string
-        const rawValue = conversationData.ai_auto_reply ?? conversation.ai_auto_reply;
-        console.log(`🔍 RAW ai_auto_reply from DB: ${rawValue} (type: ${typeof rawValue})`);
-        
-        let aiAutoReplyValue: number;
-        if (typeof rawValue === 'number') {
-          aiAutoReplyValue = rawValue === 0 ? 0 : 1;
-        } else if (typeof rawValue === 'string') {
-          // If it's a string that looks like a date, default to 1
-          if (rawValue.includes('-') && rawValue.includes(':')) {
-            console.log(`⚠️  DETECTED DATE STRING! Converting "${rawValue}" to 1`);
-            aiAutoReplyValue = 1;
-          } else {
-            // Try to parse as number
-            const parsed = parseInt(rawValue, 10);
-            aiAutoReplyValue = isNaN(parsed) ? 1 : (parsed === 0 ? 0 : 1);
-          }
-        } else {
-          // null, undefined, or other - default to 1
-          console.log(`⚠️  ai_auto_reply is null/undefined, defaulting to 1`);
-          aiAutoReplyValue = 1;
-        }
-        
-        console.log(`✅ CONVERTED ai_auto_reply: ${aiAutoReplyValue} (type: ${typeof aiAutoReplyValue})`);
-        
-        // CRITICAL: Use the converted value for the check
-        if (aiAutoReplyValue === 0) {
-          console.log(`⏸️  AI auto-reply is DISABLED (ai_auto_reply=${aiAutoReplyValue}) for conversation ${conversation.id}. Skipping automatic response.`);
-          return;
-        }
-        
-        console.log(`✅ AI auto-reply is ENABLED (ai_auto_reply=${aiAutoReplyValue}) for conversation ${conversation.id}. Proceeding with AI response.`);
+        // AI always responds automatically (toggle feature removed)
 
         console.log(`🔄 Starting AI response generation for conversation ${conversation.id}...`);
         console.log(`📝 Client message: "${Body}"`);
