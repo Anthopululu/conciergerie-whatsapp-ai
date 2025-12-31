@@ -628,11 +628,13 @@ export const dbQueries = {
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         CASE 
-           WHEN c.ai_auto_reply IS NULL THEN 1
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'timestamp without time zone' THEN 1
-           ELSE CAST(c.ai_auto_reply AS INTEGER)
-         END as ai_auto_reply,
+         COALESCE(
+           CASE 
+             WHEN c.ai_auto_reply::text ~ '^[0-9]+$' THEN c.ai_auto_reply::INTEGER
+             ELSE NULL
+           END,
+           1
+         ) as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
