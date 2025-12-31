@@ -394,6 +394,11 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
           <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '500px', width: '90%' }}>
             <h2 style={{ marginTop: 0 }}>⚙️ Configuration Twilio</h2>
             <div className="edit-section">
+              <div style={{ marginBottom: '15px', padding: '10px', background: '#f0f9ff', borderRadius: '5px', border: '1px solid #bae6fd' }}>
+                <strong style={{ display: 'block', marginBottom: '5px' }}>ℹ️ Seulement 3 champs nécessaires :</strong>
+                <small style={{ color: '#666' }}>Numéro WhatsApp, Account SID et Auth Token. C'est tout ce dont vous avez besoin pour utiliser Twilio.</small>
+              </div>
+
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
                   Numéro WhatsApp Twilio <span style={{ color: '#e74c3c' }}>*</span>
@@ -415,7 +420,7 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
 
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  Twilio Account SID
+                  Twilio Account SID <span style={{ color: '#e74c3c' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -425,12 +430,16 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
                   onChange={(e) => setTwilioSid(e.target.value)}
                   disabled={isSubmittingConfig}
                   style={{ width: '100%' }}
+                  required
                 />
+                <small style={{ display: 'block', marginTop: '5px', color: '#666', fontSize: '12px' }}>
+                  Dans <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer">Twilio Console</a> → Account Info
+                </small>
               </div>
 
               <div style={{ marginBottom: '15px' }}>
                 <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  Twilio Auth Token
+                  Twilio Auth Token <span style={{ color: '#e74c3c' }}>*</span>
                 </label>
                 <div style={{ display: 'flex', gap: '5px' }}>
                   <input
@@ -441,6 +450,7 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
                     onChange={(e) => setTwilioToken(e.target.value)}
                     disabled={isSubmittingConfig}
                     style={{ flex: 1 }}
+                    required
                   />
                   <button
                     type="button"
@@ -450,6 +460,33 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
                   >
                     {showToken ? '🙈' : '👁️'}
                   </button>
+                </div>
+                <small style={{ display: 'block', marginTop: '5px', color: '#666', fontSize: '12px' }}>
+                  Dans <a href="https://console.twilio.com" target="_blank" rel="noopener noreferrer">Twilio Console</a> → Account Info (cliquez pour révéler)
+                </small>
+              </div>
+
+              <div style={{ marginBottom: '15px', padding: '10px', background: '#fff7ed', borderRadius: '5px', border: '1px solid #fed7aa' }}>
+                <strong style={{ display: 'block', marginBottom: '5px' }}>📝 Optionnel (pour sandbox uniquement) :</strong>
+                <div style={{ marginTop: '10px' }}>
+                  <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500', fontSize: '14px' }}>
+                    Code Sandbox Twilio
+                  </label>
+                  <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                    <span style={{ padding: '8px 12px', background: '#f5f5f5', borderRadius: '5px', fontSize: '14px', color: '#666' }}>join</span>
+                    <input
+                      type="text"
+                      className="join-code-input"
+                      placeholder="happy-monkey (optionnel)"
+                      value={sandboxCode}
+                      onChange={(e) => setSandboxCode(e.target.value)}
+                      disabled={isSubmittingConfig}
+                      style={{ flex: 1 }}
+                    />
+                  </div>
+                  <small style={{ display: 'block', marginTop: '5px', color: '#666', fontSize: '12px' }}>
+                    Uniquement si vous utilisez le sandbox Twilio pour tester
+                  </small>
                 </div>
               </div>
 
