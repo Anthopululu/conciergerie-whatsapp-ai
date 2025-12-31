@@ -464,7 +464,9 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
     }
 
     // Get or create conversation for this conciergerie
-    const conversation = dbQueries.getOrCreateConversation(From, conciergerie.id);
+    const conversation = USE_POSTGRES
+      ? await dbQueries.getOrCreateConversationAsync(From, conciergerie.id)
+      : dbQueries.getOrCreateConversation(From, conciergerie.id);
     console.log(`📋 Conversation retrieved/created:`, {
       id: conversation.id,
       phone_number: conversation.phone_number,
@@ -497,7 +499,9 @@ app.post('/webhook/whatsapp', async (req: Request, res: Response) => {
       try {
         // Use the conversation object we already have (it has ai_auto_reply)
         // But refresh it from DB to ensure we have the latest value
-        const conversationData = dbQueries.getConversationById(conversation.id);
+        const conversationData = USE_POSTGRES
+          ? await dbQueries.getConversationByIdAsync(conversation.id)
+          : dbQueries.getConversationById(conversation.id);
         console.log(`🔍 Checking auto-reply for conversation ${conversation.id}:`, {
           conversationFromGetOrCreate: {
             id: conversation.id,

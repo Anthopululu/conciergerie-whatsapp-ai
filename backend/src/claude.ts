@@ -11,11 +11,17 @@ export function initClaude() {
 
 export async function generateAISuggestion(conversationId: number, clientMessage: string): Promise<string> {
   try {
+    const USE_POSTGRES = !!process.env.DATABASE_URL;
+    
     // Get conversation history for context
-    const history = dbQueries.getConversationHistory(conversationId, 10).reverse();
+    const history = USE_POSTGRES
+      ? (await dbQueries.getConversationHistoryAsync(conversationId, 10)).reverse()
+      : dbQueries.getConversationHistory(conversationId, 10).reverse();
 
     // Get conversation to find conciergerie_id
-    const conversation = dbQueries.getConversationById(conversationId);
+    const conversation = USE_POSTGRES
+      ? await dbQueries.getConversationByIdAsync(conversationId)
+      : dbQueries.getConversationById(conversationId);
 
     // Get FAQs for this conciergerie
     let faqContext = '';
