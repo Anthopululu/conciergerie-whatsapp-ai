@@ -99,14 +99,16 @@ function ConversationList({ conversations, selectedConversation, onSelectConvers
   return (
     <div className="conversation-list">
       <div className="search-bar">
-        <input
-          type="text"
-          placeholder="🔍 Rechercher dans les conversations..."
-          value={searchQuery}
-          onChange={(e) => handleSearch(e.target.value)}
-          className="search-input"
-        />
-        {isSearching && <span className="search-loading">⏳</span>}
+        <div style={{ position: 'relative' }}>
+          <input
+            type="text"
+            placeholder="🔍 Rechercher dans les conversations..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="search-input"
+          />
+          {isSearching && <span className="search-loading">⏳</span>}
+        </div>
       </div>
       <div className="conversation-list-content">
         {conversations.length === 0 ? (
