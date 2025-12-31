@@ -24,7 +24,6 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [joinCode, setJoinCode] = useState('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
-  const [sandboxNumber, setSandboxNumber] = useState('');
   const [twilioSid, setTwilioSid] = useState('');
   const [twilioToken, setTwilioToken] = useState('');
   const [sandboxCode, setSandboxCode] = useState('');
@@ -120,8 +119,10 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
   };
 
   const handleSaveConfig = async (conciergerieId: number) => {
-    if ((!whatsappNumber.trim() && !sandboxNumber.trim()) || !twilioSid.trim() || !twilioToken.trim()) {
-      alert('Veuillez remplir tous les champs requis (au moins un numéro WhatsApp, Account SID, Auth Token)');
+    // Validate required fields - only 3 essential fields needed
+    if (!whatsappNumber.trim() || !twilioSid.trim() || !twilioToken.trim()) {
+      alert('Veuillez remplir tous les champs requis : Numéro WhatsApp, Account SID et Auth Token');
+      setIsSubmittingConfig(false);
       return;
     }
 
@@ -129,18 +130,10 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
     setSuccessMessage(null);
 
     try {
-      // Use production number if provided, otherwise use sandbox number
-      const numberToSave = whatsappNumber.trim() || sandboxNumber.trim();
-      
-      if (!numberToSave) {
-        alert('Veuillez remplir au moins le numéro WhatsApp de production ou le numéro Sandbox');
-        return;
-      }
-
       // Ensure whatsapp number has correct prefix
-      const formattedNumber = numberToSave.startsWith('whatsapp:')
-        ? numberToSave
-        : `whatsapp:${numberToSave}`;
+      const formattedNumber = whatsappNumber.trim().startsWith('whatsapp:')
+        ? whatsappNumber.trim()
+        : `whatsapp:${whatsappNumber.trim()}`;
 
       // Ensure we have the admin token in headers
       const adminToken = localStorage.getItem('adminToken');
@@ -417,24 +410,6 @@ function WhatsAppOnboarding({ conciergerieId, conciergeries, onUpdateJoinCode, o
                 />
                 <small style={{ display: 'block', marginTop: '5px', color: '#666', fontSize: '12px' }}>
                   Numéro WhatsApp fourni par Twilio (sandbox ou production)
-                </small>
-              </div>
-
-              <div style={{ marginBottom: '15px' }}>
-                <label style={{ display: 'block', marginBottom: '5px', fontWeight: '500' }}>
-                  Numéro Sandbox Twilio
-                </label>
-                <input
-                  type="text"
-                  className="join-code-input"
-                  placeholder="+14155238886 ou whatsapp:+14155238886"
-                  value={sandboxNumber}
-                  onChange={(e) => setSandboxNumber(e.target.value)}
-                  disabled={isSubmittingConfig}
-                  style={{ width: '100%' }}
-                />
-                <small style={{ display: 'block', marginTop: '5px', color: '#666', fontSize: '12px' }}>
-                  Numéro utilisé si le numéro de production n'est pas configuré
                 </small>
               </div>
 
