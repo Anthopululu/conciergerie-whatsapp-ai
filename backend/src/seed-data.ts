@@ -10,17 +10,40 @@ async function seed() {
   // Initialize database
   await initDatabase();
 
-  // Create two conciergeries
-  console.log('\n📝 Creating conciergeries...');
+  // Twilio configuration (default for all conciergeries)
+  const DEFAULT_WHATSAPP_NUMBER = 'whatsapp:+14155238886';
+  const DEFAULT_TWILIO_ACCOUNT_SID = 'TWILIO_ACCOUNT_SID_ENV';
+  const DEFAULT_TWILIO_AUTH_TOKEN = 'TWILIO_AUTH_TOKEN_ENV';
+
+  // Create two conciergeries with Twilio config
+  console.log('\n📝 Creating conciergeries with Twilio configuration...');
   const conciergerie1 = USE_POSTGRES
     ? await dbQueries.createConciergerieAsync('Résidence Le Parc', 'parc@conciergerie.fr', 'parc123')
-    : dbQueries.createConciergerie('Résidence Le Parc', 'parc@conciergerie.fr', 'parc123');
+    : dbQueries.createConciergerie('Résidence Le Parc', 'parc@conciergerie.fr', 'parc123', DEFAULT_WHATSAPP_NUMBER, DEFAULT_TWILIO_ACCOUNT_SID, DEFAULT_TWILIO_AUTH_TOKEN);
   console.log(`✓ Created: ${conciergerie1.name}`);
+
+  // Update conciergerie1 with Twilio config if using PostgreSQL
+  if (USE_POSTGRES) {
+    await dbQueries.updateConciergerieAsync(conciergerie1.id, {
+      whatsapp_number: DEFAULT_WHATSAPP_NUMBER,
+      twilio_account_sid: DEFAULT_TWILIO_ACCOUNT_SID,
+      twilio_auth_token: DEFAULT_TWILIO_AUTH_TOKEN,
+    });
+  }
 
   const conciergerie2 = USE_POSTGRES
     ? await dbQueries.createConciergerieAsync('Domaine des Jardins', 'jardins@conciergerie.fr', 'jardins123')
-    : dbQueries.createConciergerie('Domaine des Jardins', 'jardins@conciergerie.fr', 'jardins123');
+    : dbQueries.createConciergerie('Domaine des Jardins', 'jardins@conciergerie.fr', 'jardins123', DEFAULT_WHATSAPP_NUMBER, DEFAULT_TWILIO_ACCOUNT_SID, DEFAULT_TWILIO_AUTH_TOKEN);
   console.log(`✓ Created: ${conciergerie2.name}`);
+
+  // Update conciergerie2 with Twilio config if using PostgreSQL
+  if (USE_POSTGRES) {
+    await dbQueries.updateConciergerieAsync(conciergerie2.id, {
+      whatsapp_number: DEFAULT_WHATSAPP_NUMBER,
+      twilio_account_sid: DEFAULT_TWILIO_ACCOUNT_SID,
+      twilio_auth_token: DEFAULT_TWILIO_AUTH_TOKEN,
+    });
+  }
 
   // Create FAQs for Conciergerie 1
   console.log('\n📚 Creating FAQs for Résidence Le Parc...');

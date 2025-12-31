@@ -7,13 +7,26 @@ dotenv.config({ path: path.join(process.cwd(), '..', '.env') });
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { dbQueries, Conciergerie } from './database';
+import { dbQueries, Conciergerie, initDatabase } from './database-wrapper';
 import { generateAISuggestion, initClaude } from './claude';
 import { sendWhatsAppMessage, initTwilio, twilioClients } from './twilio';
+
+// Check if we're using PostgreSQL
+const USE_POSTGRES = !!process.env.DATABASE_URL;
 
 // Initialize services with loaded environment variables
 initClaude();
 initTwilio();
+
+// Initialize database (async for PostgreSQL)
+(async () => {
+  try {
+    await initDatabase();
+  } catch (error) {
+    console.error('❌ Failed to initialize database:', error);
+    process.exit(1);
+  }
+})();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -1448,7 +1461,33 @@ app.listen(PORT, () => {
           console.log('   - Résidence Le Parc: parc@conciergerie.fr / parc123');
           console.log('   - Domaine des Jardins: jardins@conciergerie.fr / jardins123');
           console.log('📚 Created 6 FAQs (3 per conciergerie)');
+          console.log('📱 Twilio configured for both conciergeries');
           console.log('💡 You can also manually reinitialize with: POST /api/setup/seed');
+          
+          // Initialize Twilio clients for the seeded conciergeries
+          setTimeout(() => {
+            try {
+              const { initTwilioForConciergerie } = require('./twilio');
+              const conciergeries = dbQueries.getAllConciegeriesWithSecrets();
+              conciergeries.forEach((conciergerie: any) => {
+                if (conciergerie.whatsapp_number && conciergerie.twilio_account_sid && conciergerie.twilio_auth_token) {
+                  try {
+                    initTwilioForConciergerie(
+                      conciergerie.id,
+                      conciergerie.twilio_account_sid,
+                      conciergerie.twilio_auth_token,
+                      conciergerie.whatsapp_number
+                    );
+                    console.log(`✅ Twilio initialized for ${conciergerie.name}`);
+                  } catch (error: any) {
+                    console.error(`❌ Failed to initialize Twilio for ${conciergerie.name}:`, error.message);
+                  }
+                }
+              });
+            } catch (error: any) {
+              console.error('❌ Error initializing Twilio clients:', error.message);
+            }
+          }, 1000);
         } catch (error: any) {
           console.error('❌ Error initializing seed data:', error.message);
           // Fallback: create simple conciergeries
