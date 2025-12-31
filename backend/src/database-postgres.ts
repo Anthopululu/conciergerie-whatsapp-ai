@@ -195,17 +195,28 @@ async function createSchema() {
       try {
         // Check the actual type of the column
         const typeCheck = await client.query(`
-          SELECT data_type 
+          SELECT data_type, column_name
           FROM information_schema.columns 
           WHERE table_name = 'conversations' AND column_name = 'ai_auto_reply'
         `);
         
-        if (typeCheck.rows.length > 0 && typeCheck.rows[0].data_type !== 'integer') {
-          console.log(`⚠️  ai_auto_reply column exists but is type ${typeCheck.rows[0].data_type}, converting to INTEGER...`);
-          // Drop and recreate the column with correct type
-          await client.query(`ALTER TABLE conversations DROP COLUMN ai_auto_reply`);
-          await client.query(`ALTER TABLE conversations ADD COLUMN ai_auto_reply INTEGER DEFAULT 1`);
-          console.log('✅ Fixed ai_auto_reply column type to INTEGER');
+        if (typeCheck.rows.length > 0) {
+          const actualType = typeCheck.rows[0].data_type;
+          console.log(`🔍 ai_auto_reply column exists with type: ${actualType}`);
+          
+          if (actualType !== 'integer' && actualType !== 'bigint' && actualType !== 'smallint') {
+            console.log(`⚠️  ai_auto_reply column is type ${actualType} (not integer), fixing...`);
+            // Drop and recreate the column with correct type
+            await client.query(`ALTER TABLE conversations DROP COLUMN ai_auto_reply`);
+            await client.query(`ALTER TABLE conversations ADD COLUMN ai_auto_reply INTEGER DEFAULT 1`);
+            // Update all existing rows to have ai_auto_reply = 1
+            await client.query(`UPDATE conversations SET ai_auto_reply = 1 WHERE ai_auto_reply IS NULL`);
+            console.log('✅ Fixed ai_auto_reply column type to INTEGER');
+          } else {
+            console.log('✅ ai_auto_reply column type is correct (integer)');
+          }
+        } else {
+          console.log('⚠️  ai_auto_reply column not found in information_schema, but ALTER TABLE failed');
         }
       } catch (fixError: any) {
         console.log('⚠️  Could not check/fix ai_auto_reply column type:', fixError.message);
@@ -627,11 +638,15 @@ export const dbQueries = {
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         CASE 
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN c.ai_auto_reply
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN c.ai_auto_reply::integer
-           ELSE 1
-         END as ai_auto_reply,
+         COALESCE(
+           CASE 
+             WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN c.ai_auto_reply
+             WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN c.ai_auto_reply::integer
+             WHEN pg_typeof(c.ai_auto_reply)::text = 'smallint' THEN c.ai_auto_reply::integer
+             ELSE NULL
+           END,
+           1
+         )::INTEGER as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
