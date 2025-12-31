@@ -25,39 +25,39 @@ async function seed() {
   // Create two conciergeries with Twilio config
   console.log('\n📝 Creating conciergeries with Twilio configuration...');
   const conciergerie1 = USE_POSTGRES
-    ? await dbQueriesToUse.createConciergerieAsync('Résidence Le Parc', 'parc@conciergerie.fr', 'parc123')
+    ? await (dbQueriesToUse as any).createConciergerieAsync('Résidence Le Parc', 'parc@conciergerie.fr', 'parc123')
     : dbQueriesToUse.createConciergerie('Résidence Le Parc', 'parc@conciergerie.fr', 'parc123', DEFAULT_WHATSAPP_NUMBER, DEFAULT_TWILIO_ACCOUNT_SID, DEFAULT_TWILIO_AUTH_TOKEN);
   console.log(`✓ Created: ${conciergerie1.name}`);
 
   // Update conciergerie1 with Twilio config if available
   if (hasTwilioConfig) {
     if (USE_POSTGRES) {
-      await dbQueriesToUse.updateConciergerieAsync(conciergerie1.id, {
+      await (dbQueriesToUse as any).updateConciergerieAsync(conciergerie1.id, {
         whatsapp_number: DEFAULT_WHATSAPP_NUMBER,
         twilio_account_sid: DEFAULT_TWILIO_ACCOUNT_SID,
         twilio_auth_token: DEFAULT_TWILIO_AUTH_TOKEN,
       });
     } else {
-      dbQueriesToUse.updateConciergerieWhatsApp(conciergerie1.id, DEFAULT_WHATSAPP_NUMBER!, DEFAULT_TWILIO_ACCOUNT_SID!, DEFAULT_TWILIO_AUTH_TOKEN!);
+      (dbQueriesToUse as any).updateConciergerieWhatsApp(conciergerie1.id, DEFAULT_WHATSAPP_NUMBER!, DEFAULT_TWILIO_ACCOUNT_SID!, DEFAULT_TWILIO_AUTH_TOKEN!);
     }
     console.log(`✓ Twilio configured for ${conciergerie1.name}`);
   }
 
   const conciergerie2 = USE_POSTGRES
-    ? await dbQueriesToUse.createConciergerieAsync('Domaine des Jardins', 'jardins@conciergerie.fr', 'jardins123')
+    ? await (dbQueriesToUse as any).createConciergerieAsync('Domaine des Jardins', 'jardins@conciergerie.fr', 'jardins123')
     : dbQueriesToUse.createConciergerie('Domaine des Jardins', 'jardins@conciergerie.fr', 'jardins123', DEFAULT_WHATSAPP_NUMBER, DEFAULT_TWILIO_ACCOUNT_SID, DEFAULT_TWILIO_AUTH_TOKEN);
   console.log(`✓ Created: ${conciergerie2.name}`);
 
   // Update conciergerie2 with Twilio config if available
   if (hasTwilioConfig) {
     if (USE_POSTGRES) {
-      await dbQueriesToUse.updateConciergerieAsync(conciergerie2.id, {
+      await (dbQueriesToUse as any).updateConciergerieAsync(conciergerie2.id, {
         whatsapp_number: DEFAULT_WHATSAPP_NUMBER,
         twilio_account_sid: DEFAULT_TWILIO_ACCOUNT_SID,
         twilio_auth_token: DEFAULT_TWILIO_AUTH_TOKEN,
       });
     } else {
-      dbQueriesToUse.updateConciergerieWhatsApp(conciergerie2.id, DEFAULT_WHATSAPP_NUMBER!, DEFAULT_TWILIO_ACCOUNT_SID!, DEFAULT_TWILIO_AUTH_TOKEN!);
+      (dbQueriesToUse as any).updateConciergerieWhatsApp(conciergerie2.id, DEFAULT_WHATSAPP_NUMBER!, DEFAULT_TWILIO_ACCOUNT_SID!, DEFAULT_TWILIO_AUTH_TOKEN!);
     }
     console.log(`✓ Twilio configured for ${conciergerie2.name}`);
   }
