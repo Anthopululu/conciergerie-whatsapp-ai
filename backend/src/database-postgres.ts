@@ -549,17 +549,19 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     // Try to get existing conversation
-    // Use explicit column selection with CAST to ensure ai_auto_reply is INTEGER
+    // Use explicit column selection - if ai_auto_reply doesn't exist or is wrong type, default to 1
     let result = await pool.query(
       `SELECT 
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         CASE 
-           WHEN c.ai_auto_reply IS NULL THEN 1
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'timestamp without time zone' THEN 1
-           ELSE CAST(c.ai_auto_reply AS INTEGER)
-         END as ai_auto_reply,
+         COALESCE(
+           CASE 
+             WHEN c.ai_auto_reply::text ~ '^[0-9]+$' THEN c.ai_auto_reply::INTEGER
+             ELSE NULL
+           END,
+           1
+         ) as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
