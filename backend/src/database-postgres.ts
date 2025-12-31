@@ -639,15 +639,25 @@ export const dbQueries = {
       [conciergerieId]
     );
 
-    return result.rows.map(row => ({
-      id: row.id,
-      conciergerie_id: row.conciergerie_id,
-      conciergerie_name: row.conciergerie_name,
-      phone_number: row.phone_number,
-      ai_auto_reply: row.ai_auto_reply ?? 1,
-      created_at: row.created_at,
-      last_message_at: row.last_message_at,
-    }));
+    return result.rows.map(row => {
+      // Ensure ai_auto_reply is an integer (0 or 1), not a date string
+      const aiAutoReply = typeof row.ai_auto_reply === 'number' 
+        ? row.ai_auto_reply 
+        : (row.ai_auto_reply === '1' || row.ai_auto_reply === 1 || row.ai_auto_reply === true) 
+          ? 1 
+          : (row.ai_auto_reply === '0' || row.ai_auto_reply === 0 || row.ai_auto_reply === false) 
+            ? 0 
+            : 1; // Default to 1 if null or invalid
+      return {
+        id: row.id,
+        conciergerie_id: row.conciergerie_id,
+        conciergerie_name: row.conciergerie_name,
+        phone_number: row.phone_number,
+        ai_auto_reply: aiAutoReply,
+        created_at: row.created_at,
+        last_message_at: row.last_message_at,
+      };
+    });
   },
 
   getAllConversations(): Conversation[] {
@@ -665,15 +675,25 @@ export const dbQueries = {
        ORDER BY c.last_message_at DESC`
     );
 
-    return result.rows.map(row => ({
-      id: row.id,
-      conciergerie_id: row.conciergerie_id,
-      conciergerie_name: row.conciergerie_name,
-      phone_number: row.phone_number,
-      ai_auto_reply: row.ai_auto_reply ?? 1,
-      created_at: row.created_at,
-      last_message_at: row.last_message_at,
-    }));
+    return result.rows.map(row => {
+      // Ensure ai_auto_reply is an integer (0 or 1), not a date string
+      const aiAutoReply = typeof row.ai_auto_reply === 'number' 
+        ? row.ai_auto_reply 
+        : (row.ai_auto_reply === '1' || row.ai_auto_reply === 1 || row.ai_auto_reply === true) 
+          ? 1 
+          : (row.ai_auto_reply === '0' || row.ai_auto_reply === 0 || row.ai_auto_reply === false) 
+            ? 0 
+            : 1; // Default to 1 if null or invalid
+      return {
+        id: row.id,
+        conciergerie_id: row.conciergerie_id,
+        conciergerie_name: row.conciergerie_name,
+        phone_number: row.phone_number,
+        ai_auto_reply: aiAutoReply,
+        created_at: row.created_at,
+        last_message_at: row.last_message_at,
+      };
+    });
   },
 
   updateConversationAutoReply(conversationId: number, autoReply: number): void {
