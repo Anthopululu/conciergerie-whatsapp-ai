@@ -611,11 +611,15 @@ export const dbQueries = {
     );
 
     const row = result.rows[0];
+    // FIX: Ensure ai_auto_reply is an integer (0 or 1)
+    const aiAutoReply = typeof row.ai_auto_reply === 'number' 
+      ? (row.ai_auto_reply === 0 ? 0 : 1)
+      : 1;
     return {
       id: row.id,
       conciergerie_id: row.conciergerie_id,
       phone_number: row.phone_number,
-      ai_auto_reply: row.ai_auto_reply ?? 1,
+      ai_auto_reply: aiAutoReply,
       created_at: row.created_at,
       last_message_at: row.last_message_at,
     };
