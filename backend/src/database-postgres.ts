@@ -560,18 +560,23 @@ export const dbQueries = {
     if (!pool) throw new Error('Database not initialized');
     
     // Try to get existing conversation
-    // FIX: Force INTEGER - if column is TIMESTAMP, use 1 as default
+    // FIX: Use a subquery to safely get ai_auto_reply as INTEGER
+    // If the column is TIMESTAMP or doesn't exist, default to 1
     let result = await pool.query(
       `SELECT 
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         CASE 
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN COALESCE(c.ai_auto_reply, 1)
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN COALESCE(c.ai_auto_reply, 1)::integer
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'smallint' THEN COALESCE(c.ai_auto_reply, 1)::integer
-           ELSE 1
-         END::INTEGER as ai_auto_reply,
+         (
+           SELECT CASE 
+             WHEN pg_typeof(c2.ai_auto_reply)::text = 'integer' THEN COALESCE(c2.ai_auto_reply, 1)
+             WHEN pg_typeof(c2.ai_auto_reply)::text = 'bigint' THEN COALESCE(c2.ai_auto_reply, 1)::integer
+             WHEN pg_typeof(c2.ai_auto_reply)::text = 'smallint' THEN COALESCE(c2.ai_auto_reply, 1)::integer
+             ELSE 1
+           END
+           FROM conversations c2
+           WHERE c2.id = c.id
+         )::INTEGER as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
@@ -642,12 +647,16 @@ export const dbQueries = {
          c.id, 
          c.conciergerie_id, 
          c.phone_number, 
-         CASE 
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'integer' THEN COALESCE(c.ai_auto_reply, 1)
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'bigint' THEN COALESCE(c.ai_auto_reply, 1)::integer
-           WHEN pg_typeof(c.ai_auto_reply)::text = 'smallint' THEN COALESCE(c.ai_auto_reply, 1)::integer
-           ELSE 1
-         END::INTEGER as ai_auto_reply,
+         (
+           SELECT CASE 
+             WHEN pg_typeof(c2.ai_auto_reply)::text = 'integer' THEN COALESCE(c2.ai_auto_reply, 1)
+             WHEN pg_typeof(c2.ai_auto_reply)::text = 'bigint' THEN COALESCE(c2.ai_auto_reply, 1)::integer
+             WHEN pg_typeof(c2.ai_auto_reply)::text = 'smallint' THEN COALESCE(c2.ai_auto_reply, 1)::integer
+             ELSE 1
+           END
+           FROM conversations c2
+           WHERE c2.id = c.id
+         )::INTEGER as ai_auto_reply,
          c.created_at, 
          c.last_message_at, 
          co.name as conciergerie_name
