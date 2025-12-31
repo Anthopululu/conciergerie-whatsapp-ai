@@ -10,7 +10,8 @@ import 'dotenv/config';
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
-import { dbQueries, Conciergerie, initDatabase } from './database-wrapper';
+import { dbQueries, Conciergerie, initDatabase } from './database';
+import { dbQueries as dbQueriesPostgres, initDatabase as initDatabasePostgres } from './database-postgres';
 import { generateAISuggestion, initClaude } from './claude';
 import { sendWhatsAppMessage, initTwilio, twilioClients } from './twilio';
 
