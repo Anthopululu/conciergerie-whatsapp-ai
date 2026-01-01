@@ -40,6 +40,15 @@ function generateToken(): string {
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }
 
+// Debug endpoint to check database status
+app.get('/debug/db-status', (_req: Request, res: Response) => {
+  res.json({
+    USE_POSTGRES,
+    DATABASE_URL_set: !!process.env.DATABASE_URL,
+    dbQueries_type: USE_POSTGRES ? 'PostgreSQL' : 'SQLite'
+  });
+});
+
 // Health check
 // Health check endpoint for production monitoring
 app.get('/health', (req: Request, res: Response) => {

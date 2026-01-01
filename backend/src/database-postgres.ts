@@ -33,8 +33,10 @@ async function initDatabase() {
 async function createSchema() {
   if (!pool) throw new Error('Database not initialized');
 
+  console.log('🔨 Creating PostgreSQL schema...');
   const client = await pool.connect();
   try {
+    console.log('📝 Starting transaction...');
     await client.query('BEGIN');
 
     // Create conciergeries table
@@ -178,9 +180,11 @@ async function createSchema() {
       CREATE INDEX IF NOT EXISTS idx_phone_routing_phone ON phone_routing(phone_number)
     `);
 
+    console.log('💾 Committing transaction...');
     await client.query('COMMIT');
-    console.log('✅ PostgreSQL schema initialized');
+    console.log('✅ PostgreSQL schema initialized successfully');
   } catch (error) {
+    console.error('❌ Error creating schema, rolling back:', error);
     await client.query('ROLLBACK');
     throw error;
   } finally {
