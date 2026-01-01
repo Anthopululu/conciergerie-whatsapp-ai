@@ -178,51 +178,6 @@ async function createSchema() {
       CREATE INDEX IF NOT EXISTS idx_phone_routing_phone ON phone_routing(phone_number)
     `);
 
-    // Add is_ai column if it doesn't exist (migration)
-    try {
-      await client.query(`ALTER TABLE messages ADD COLUMN is_ai INTEGER DEFAULT 0`);
-      console.log('✅ Added is_ai column to messages table');
-    } catch (error: any) {
-      // Column already exists, ignore
-    }
-
-    // Add ai_auto_reply column if it doesn't exist (migration)
-    try {
-      await client.query(`ALTER TABLE conversations ADD COLUMN ai_auto_reply INTEGER DEFAULT 1`);
-      console.log('✅ Added ai_auto_reply column to conversations table');
-    } catch (error: any) {
-      // Column already exists, check if it's the wrong type and fix it
-      try {
-        // Check the actual type of the column
-        const typeCheck = await client.query(`
-          SELECT data_type, column_name
-          FROM information_schema.columns 
-          WHERE table_name = 'conversations' AND column_name = 'ai_auto_reply'
-        `);
-        
-        if (typeCheck.rows.length > 0) {
-          const actualType = typeCheck.rows[0].data_type;
-          console.log(`🔍 ai_auto_reply column exists with type: ${actualType}`);
-          
-          if (actualType !== 'integer' && actualType !== 'bigint' && actualType !== 'smallint') {
-            console.log(`⚠️  ai_auto_reply column is type ${actualType} (not integer), fixing...`);
-            // Drop and recreate the column with correct type
-            await client.query(`ALTER TABLE conversations DROP COLUMN ai_auto_reply`);
-            await client.query(`ALTER TABLE conversations ADD COLUMN ai_auto_reply INTEGER DEFAULT 1`);
-            // Update all existing rows to have ai_auto_reply = 1
-            await client.query(`UPDATE conversations SET ai_auto_reply = 1 WHERE ai_auto_reply IS NULL`);
-            console.log('✅ Fixed ai_auto_reply column type to INTEGER');
-          } else {
-            console.log('✅ ai_auto_reply column type is correct (integer)');
-          }
-        } else {
-          console.log('⚠️  ai_auto_reply column not found in information_schema, but ALTER TABLE failed');
-        }
-      } catch (fixError: any) {
-        console.log('⚠️  Could not check/fix ai_auto_reply column type:', fixError.message);
-      }
-    }
-
     await client.query('COMMIT');
     console.log('✅ PostgreSQL schema initialized');
   } catch (error) {
